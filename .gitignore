@@ -110,3 +110,6 @@ venv.bak/
 
 # airflow
 airflow/logs
+
+# Storage
+MinIO

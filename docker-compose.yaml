@@ -245,6 +245,59 @@ services:
     networks:
       - docker-net
   
+
+  minio:
+    hostname: minio
+    image: minio/minio
+    container_name: minio
+    restart: always
+    volumes:
+      - ./MinIO/storage:/data
+      - ./MinIO/config:/root/.minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    env_file:
+      - .env
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minio}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minio123}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-minio}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-minio}
+      - AWS_REGION=us-east-1
+    command: server /data --console-address ":9090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    networks:
+      - docker-net
+
+  minio-client:
+    image: minio/mc
+    container_name: minio-client
+    hostname: mc
+    restart: on-failure
+    env_file:
+      - .env
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO...';
+      until (/usr/bin/mc alias set minio http://minio:9000 ${MINIO_ROOT_USER:-minio} ${MINIO_ROOT_PASSWORD:-minio123}); 
+      do echo '...waiting...' && sleep 2; done;
+      echo 'MinIO is ready!';
+      /usr/bin/mc mb minio/${DATALAKE_BUCKET:-datalake};
+      /usr/bin/mc policy set public minio/${DATALAKE_BUCKET:-datalake};
+      exit 0;
+      "
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - docker-net
+
+
   # kafka-broker-1:
   #   image: bitnami/kafka:latest
   #   container_name: kafka-broker-1
