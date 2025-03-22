@@ -1,4 +1,4 @@
 pandas
 requests
 bs4
-playwright
+# playwright

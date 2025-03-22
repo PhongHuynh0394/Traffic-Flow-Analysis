@@ -1,5 +1,6 @@
 ARG AIRFLOW_IMAGE_NAME
-FROM ${AIRFLOW_IMAGE_NAME:-apache/airflow:slim-2.10.5-python3.9}
+ARG AIRFLOW_UID
+FROM ${AIRFLOW_IMAGE_NAME:-apache/airflow:latest-python3.9}
 
 ENV AIRFLOW_HOME=/opt/airflow
 
@@ -39,3 +40,4 @@ USER $AIRFLOW_UID
 
 RUN python3 -m pip install --upgrade pip 
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
+# RUN playwright install
