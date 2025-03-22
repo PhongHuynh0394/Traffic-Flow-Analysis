@@ -262,8 +262,6 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minio}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minio123}
-      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-minio}
-      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-minio}
       - AWS_REGION=us-east-1
     command: server /data --console-address ":9090"
     healthcheck:
@@ -281,6 +279,11 @@ services:
     restart: on-failure
     env_file:
       - .env
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - DATALAKE_BUCKET=datalake
+      # - MINIO_ROOT_USER=minio
+      # - MINIO_ROOT_PASSWORD=minio123
     entrypoint: >
       /bin/sh -c "
       echo 'Waiting for MinIO...';
