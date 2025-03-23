@@ -299,6 +299,24 @@ services:
         condition: service_healthy
     networks:
       - docker-net
+  
+  notebook:
+    container_name: notebook
+    build:
+      context: ./notebook
+    image: traffic-notebook:latest
+    volumes:
+      - ${PWD}/notebook/workplace:/home/jovyan/workplace
+    ports:
+      - 8888:8888
+    environment:
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-pass}
+    # command: start-notebook.sh
+    user: root
+    env_file:
+      - .env
+    networks:
+      - docker-net
 
 
   # kafka-broker-1:

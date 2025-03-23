@@ -9,7 +9,7 @@ AIRFLOW_SERVICES = airflow-webserver airflow-scheduler postgres airflow-triggere
 ALL_SERVICES = $(AIRFLOW_SERVICES) 
 COMPOSE_FILE = docker-compose.yaml
 
-.PHONY: build up down downall downing restart 
+.PHONY: build up down downall downing restart notebook
 
 build:
 	docker compose build --no-cache
@@ -29,6 +29,9 @@ else
 	@echo "Supported classes: airflow, clickhouse, none (default for all services)"
 	exit 1
 endif
+
+notebook:
+	docker compose up -d notebook
 
 downall:
 	docker compose down --volumes --rmi all
