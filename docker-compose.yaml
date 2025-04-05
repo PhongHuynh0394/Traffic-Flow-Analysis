@@ -76,8 +76,11 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+      POSTGRES_CRAWL_DB: raw_crawl
+      POSTGRES_CRAWL_USER: airflow_crawl
     volumes:
       - postgres-airflow:/var/lib/postgresql/data
+      - ./database_init/psql_init.sql:/docker-entrypoint-initdb.d/psql_init.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
