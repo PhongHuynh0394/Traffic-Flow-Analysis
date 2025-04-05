@@ -1,11 +1,12 @@
-
 from abc import ABC, abstractmethod
 import logging
 import os
+from .ua_rotator import UserAgentRotator
 
 class BaseCrawler(ABC):
 
     def __init__(self, log_level="INFO"):
+        self.ua_rotator = UserAgentRotator()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_logger(log_level)
 
