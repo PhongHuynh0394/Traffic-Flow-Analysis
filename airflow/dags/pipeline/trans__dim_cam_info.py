@@ -1,22 +1,32 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.models.param import Param
 from airflow.decorators import task
 from datetime import datetime
+import pandas as pd
 import logging
+import os
+import time
 
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
+
+default_args = {
+    "owner": "phonghuynh",
+    "depends_on_past": False,
+    "retries": 0
+}
 
 
 # Utils
 def create_psql_table(hook):
     query = f"""
-        CREATE TABLE IF NOT EXIST {PSQL_TABLE} (
-            CamId varchar(255) PRIMARY KEY
-            DisplayName varchar(255),
-            District varchar(255)
+        CREATE TABLE IF NOT EXISTS {PSQL_TABLE} (
+            id varchar(255) PRIMARY KEY,
+            location varchar(255),
+            district varchar(255)
         )
     """
     try:
@@ -40,29 +50,52 @@ with DAG(
         task_id='start'
     )
 
+    create_table_psql = SQLExecuteQueryOperator(
+        task_id="create_psql_table",
+        conn_id=PSQL_CONN_ID,
+        sql=f"CREATE TABLE IF NOT EXISTS {PSQL_TABLE} (id varchar(255) PRIMARY KEY, location varchar(255), district varchar(255));"
+    )
+
+
     @task(provide_context=True)
     def cam_id_crawling(limit: int = -1):
         from utils.crawling import TrafficCrawler
 
         crawler = TrafficCrawler()
-        return crawler.get_cam_info(limit=limit)
-    
+        data = crawler.get_cam_info(limit=limit)
+
+        df = pd.DataFrame(data)
+        df.rename(columns={
+            "CamId": "id",
+            "DisplayName": "location",
+            "Disctrict": "district"
+        }, inplace=True)
+        df.fillna(value="", inplace=True)
+
+        return df
+
 
     @task()
-    def ingest_psql(data: list[dict]):
-        import pandas as pd
+    def ingest_psql(data: pd.DataFrame):
         
         # Create table
         hook = PostgresHook(postgres_conn_id=PSQL_CONN_ID)
-        create_psql_table(hook)
+        
+        temp_csv_path = '/tmp/temp_data.csv'
+        data.to_csv(temp_csv_path, index=False, header=False)
+        logging.info(f"Write data to {temp_csv_path}")
 
-        # Ingest
         try:
-            df = pd.DataFrame(data)
-            df.to_sql(PSQL_TABLE, hook.get_sqlalchemy_engine(), if_exists='replace', index=False)
+            time.sleep(100)
+            hook.bulk_load(table=PSQL_TABLE, tmp_file=temp_csv_path)
+            logging.info(f"Successfully loaded data into {PSQL_TABLE}")
         except Exception as e:
-            logging.error(f"Failed to ingest data into {PSQL_TABLE}: {e}")
+            logging.error(f"Failed to load data into {PSQL_TABLE}: {e}")
             raise
+        finally:
+            if os.path.exists(temp_csv_path):
+                logging.info(f"Delete temp file {temp_csv_path}")
+                os.remove(temp_csv_path)
 
 
     end_task = DummyOperator(
@@ -72,4 +105,4 @@ with DAG(
     cam_id = cam_id_crawling(limit="{{params.limit}}")
     ingest_psql_task = ingest_psql(cam_id)
 
-    start_task >> cam_id >> ingest_psql_task >> end_task
+    start_task >> create_table_psql >> cam_id >> ingest_psql_task >> end_task

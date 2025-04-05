@@ -1,4 +1,5 @@
 from ..basecrawler import BaseCrawler
+import pandas as pd
 import json
 import os
 import re
@@ -90,6 +91,13 @@ class TrafficCrawler(BaseCrawler):
 if __name__ == "__main__":
     crawler = TrafficCrawler()
     data = crawler.get_cam_info()
-    print(len(data))
 
+    df = pd.DataFrame(data)
+    df.rename(columns={
+        "CamId": "id",
+        "DisplayName": "location",
+        "Disctrict": "district"
+    }, inplace=True)
+    # df.fillna(value="", inplace=True)
+    df.to_csv("cam_info.csv", index=False)
     
