@@ -2,9 +2,11 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models.param import Param
 from airflow.decorators import task
+from hooks.minio_hook import MinioHook
 from datetime import datetime
 import logging
 
+MINIO_CONN = 'conn_minio__datalake'
 
 # Initialize the DAG
 with DAG(
@@ -23,6 +25,9 @@ with DAG(
     def image_crawling(**kwargs):
         from utils.crawling import TrafficCrawler
         crawler = TrafficCrawler()
+
+        hook = MinioHook(minio_conn_id=MINIO_CONN)
+
         
 
     end_task = DummyOperator(

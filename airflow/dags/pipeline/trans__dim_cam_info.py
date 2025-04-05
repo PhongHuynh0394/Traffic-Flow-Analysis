@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 
 PSQL_TABLE = "tbl__raw__dim_cam_info"
-PSQL_CONN_ID = "conn_raw_psql"
+PSQL_CONN_ID = "conn_psql__raw_crawl"
 
 
 # Utils

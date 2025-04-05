@@ -130,7 +130,7 @@ services:
     image: *AIRFLOW_IMAGE
     container_name: airflow-scheduler
     <<: *airflow-common
-    command: scheduler
+    command: bash -c "python /opt/airflow/init_connection.py && airflow scheduler"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s

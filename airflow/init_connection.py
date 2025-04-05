@@ -4,7 +4,7 @@ from airflow import settings
 from airflow.models import Connection
 from sqlalchemy.orm import sessionmaker
 from airflow.utils.db import provide_session
-from airflow.hooks.base_hook import BaseHook
+# from airflow.hooks.base_hook import BaseHook
 import logging
 load_dotenv()
 
