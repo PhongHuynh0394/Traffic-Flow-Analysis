@@ -24,6 +24,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-./airflow}/logs:/opt/airflow/logs
     # - ${AIRFLOW_PROJ_DIR:-./airflow}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-./airflow}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-./airflow}/init_connection.py:/opt/airflow/init_connection.py
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -72,6 +73,7 @@ services:
   postgres:
     image: postgres:13
     container_name: postgresdb
+    hostname: postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow

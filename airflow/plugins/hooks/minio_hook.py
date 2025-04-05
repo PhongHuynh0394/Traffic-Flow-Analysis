@@ -16,7 +16,7 @@ class MinioHook(BaseHook):
             connection.host,
             access_key=connection.login,
             secret_key=connection.password,
-            secure=False  # Set to True if using https
+            secure=False  
         )
 
 
