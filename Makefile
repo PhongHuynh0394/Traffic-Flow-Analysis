@@ -6,7 +6,7 @@ SERVICE ?= none
 AIRFLOW_SERVICES = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
 # KAFKA_SERVICES = kafka
 # CLICKHOUSE_SERVICES = clickhouse
-ALL_SERVICES = $(AIRFLOW_SERVICES) 
+ALL_SERVICES = $(AIRFLOW_SERVICES) redis minio minio-client
 COMPOSE_FILE = docker-compose.yaml
 
 .PHONY: build up down downall downing restart notebook

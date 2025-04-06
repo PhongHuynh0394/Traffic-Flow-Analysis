@@ -3,10 +3,11 @@ import os
 import requests
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from typing import Union, Any, Optional
 
 class ProxyProvider(ABC):
 
-    def __init__(self, token: str | None = None):
+    def __init__(self, token: Optional[str] = None):
         self._token = token
 
     @abstractmethod
@@ -18,7 +19,7 @@ class WebshareProvider(ProxyProvider):
     _PROXY_API_URL = "https://proxy.webshare.io/api/v2/proxy/list/"
     TOKEN_REQUIRED = True
 
-    def __init__(self, name: str = "WEBSHARE", token: str | None = None):
+    def __init__(self, name: str = "WEBSHARE", token: Optional[str] = None):
         super().__init__(token)
         self.name = name
 
@@ -64,7 +65,7 @@ class GimmeproxyProvider(ProxyProvider):
     LIST_SIZE = 30
     
 
-    def __init__(self, name: str = "GIMMEPROXY", token: str | None = None):
+    def __init__(self, name: str = "GIMMEPROXY", token: Optional[str] = None):
         self.name = name
     
     def _get_proxy(self) -> str:

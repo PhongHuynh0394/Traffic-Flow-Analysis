@@ -38,6 +38,7 @@ networks:
 
 volumes:
   postgres-airflow:
+  traffic-redis-volume:
 
 services:
   # fastapi:
@@ -306,7 +307,19 @@ services:
         condition: service_healthy
     networks:
       - docker-net
-  
+
+
+  redis:
+    container_name: traffic-redis
+    image: redis:7.2.4
+    ports:
+      - "6379:6379"
+    networks:
+      - docker-net
+    volumes:
+      - traffic-redis-volume:/data
+
+
   notebook:
     container_name: notebook
     build:

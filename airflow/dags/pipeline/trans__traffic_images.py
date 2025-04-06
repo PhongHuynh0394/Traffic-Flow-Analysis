@@ -13,6 +13,7 @@ MINIO_CONN = 'conn_minio__datalake'
 BUCKET = "datalake"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
+CAM_ID = ["58af9a07bd82540010390c3b"]
 
 params = {
     "id": Param(type="string",
@@ -39,10 +40,6 @@ with DAG(
     start_task = DummyOperator(
         task_id='start'
     )
-
-    @task
-    def get_img_id():
-        pass
 
     @task(provide_context=True)
     def image_crawling(id: str):

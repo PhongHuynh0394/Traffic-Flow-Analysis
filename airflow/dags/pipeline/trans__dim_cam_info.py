@@ -73,7 +73,7 @@ with DAG(
         }, inplace=True)
         df.fillna(value="unknown", inplace=True)
 
-        return df
+        return df[['id', 'location', 'district']]
 
 
     @task()
@@ -86,7 +86,7 @@ with DAG(
         hook.run(f"TRUNCATE TABLE {PSQL_TABLE};")
         
         temp_csv_path = '/tmp/temp_data.tsv'
-        data.to_csv(temp_csv_path, sep='\t', index=False, header=True)
+        data.to_csv(temp_csv_path, sep='\t', index=False, header=False)
         logging.info(f"Write data to {temp_csv_path}")
 
         try:
