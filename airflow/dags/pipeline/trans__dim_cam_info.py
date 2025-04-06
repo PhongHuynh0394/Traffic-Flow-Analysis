@@ -70,7 +70,7 @@ with DAG(
             "DisplayName": "location",
             "Disctrict": "district"
         }, inplace=True)
-        df.fillna(value="", inplace=True)
+        df.fillna(value="unknown", inplace=True)
 
         return df
 
@@ -80,9 +80,12 @@ with DAG(
         
         # Create table
         hook = PostgresHook(postgres_conn_id=PSQL_CONN_ID)
+
+        # TRUNCATE
+        hook.run(f"TRUNCATE TABLE {PSQL_TABLE};")
         
-        temp_csv_path = '/tmp/temp_data.csv'
-        data.to_csv(temp_csv_path, index=False, header=False)
+        temp_csv_path = '/tmp/temp_data.tsv'
+        data.to_csv(temp_csv_path, sep='\t', index=False, header=False)
         logging.info(f"Write data to {temp_csv_path}")
 
         try:

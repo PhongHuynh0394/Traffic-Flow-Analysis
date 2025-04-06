@@ -8,12 +8,16 @@ import logging
 
 MINIO_CONN = 'conn_minio__datalake'
 
+params = {
+    "id": Param(default=-1, type="integer")
+}
+
 # Initialize the DAG
 with DAG(
     'trans__traffic_images',  
     description='Crawling traffic image',
     schedule_interval=None,  
-    start_date=datetime(2023, 4, 5),  
+    start_date=datetime(2023, 4, 5),
     catchup=False
 ) as dag:
 
@@ -25,6 +29,7 @@ with DAG(
     def image_crawling(**kwargs):
         from utils.crawling import TrafficCrawler
         crawler = TrafficCrawler()
+
 
         hook = MinioHook(minio_conn_id=MINIO_CONN)
 

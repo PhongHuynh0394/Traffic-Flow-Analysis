@@ -76,28 +76,27 @@ class TrafficCrawler(BaseCrawler):
     def crawl(self, id: str):
         headers = {
             "User-Agent": self.ua_rotator.get_random_ua(),
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+            # "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
         }
         params = {
             "id": id
         }
         response = requests.get(self._BASE_URL, headers=headers, params=params)
         
-        if response.status_code == 200:
-            return response.content
-        pass
+        # if response.status_code == 200:
+        return response.content
         
 
 if __name__ == "__main__":
     crawler = TrafficCrawler()
     data = crawler.get_cam_info()
 
-    df = pd.DataFrame(data)
-    df.rename(columns={
-        "CamId": "id",
-        "DisplayName": "location",
-        "Disctrict": "district"
-    }, inplace=True)
-    # df.fillna(value="", inplace=True)
-    df.to_csv("cam_info.csv", index=False)
+    # df = pd.DataFrame(data)
+    # df.rename(columns={
+    #     "CamId": "id",
+    #     "DisplayName": "location",
+    #     "Disctrict": "district"
+    # }, inplace=True)
+    # # df.fillna(value="", inplace=True)
+    # df.to_csv("cam_info.csv", index=False)
     
