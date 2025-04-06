@@ -39,6 +39,7 @@ def create_psql_table(hook):
 
 with DAG(
     'trans__traffic_image_id',  
+    default_args=default_args,
     description='Crawling traffic image id',
     schedule_interval=None,  
     start_date=datetime(2023, 4, 5),  

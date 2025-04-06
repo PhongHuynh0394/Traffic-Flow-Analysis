@@ -75,13 +75,13 @@ class TrafficCrawler(BaseCrawler):
     
     def crawl(self, id: str):
         headers = {
-            "User-Agent": self.ua_rotator.get_random_ua(),
+            "User-Agent": self.ua_rotator.rotate(),
             # "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
         }
         params = {
             "id": id
         }
-        response = requests.get(self._BASE_URL, headers=headers, params=params)
+        response = requests.get(self._cam_image_url, headers=headers, params=params)
         
         # if response.status_code == 200:
         return response.content

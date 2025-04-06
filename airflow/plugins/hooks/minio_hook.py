@@ -1,4 +1,5 @@
 import minio
+from io import BytesIO
 from airflow.hooks.base_hook import BaseHook
 from minio import Minio
 from minio.error import S3Error
@@ -8,31 +9,53 @@ class MinioHook(BaseHook):
         super().__init__(*args, **kwargs)
         self.conn_id = conn_id
         self.client = self._get_minio_client()
-
+    
 
     def _get_minio_client(self):
         connection = self.get_connection(self.conn_id)
+        endpoint = f"{connection.host}:{connection.port}"
         return Minio(
-            connection.host,
+            endpoint,
             access_key=connection.login,
             secret_key=connection.password,
             secure=False  
         )
+    
+    def upload_img(self, bucket_name: str, prefix: str, image_data: bytes):
+        length = len(image_data)
+        image_data = BytesIO(image_data)
 
-
-    def upload_file(self, bucket_name: str, file_path: str, object_name: str):
+        if not self.client.bucket_exists(bucket_name):
+            raise Exception(f"Bucket {bucket_name} does not exist")
+        
         try:
-            self.client.fput_object(bucket_name, object_name, file_path)
-            self.log.info(f"File {file_path} uploaded successfully to {bucket_name}/{object_name}")
+            self.client.put_object(
+                bucket_name,
+                prefix,
+                image_data,
+                length=length,  
+                content_type="image/jpeg"  # Content type (MIME type) of the image
+            )
+            self.log.info(f"Image uploaded successfully to {bucket_name}/{prefix}")
+        except S3Error as e:
+            self.log.error(f"Error uploading image to MinIO: {e}")
+            raise
+
+
+
+    def upload_file(self, bucket_name: str, file_path: str, prefix: str):
+        try:
+            self.client.fput_object(bucket_name, prefix, file_path)
+            self.log.info(f"File {file_path} uploaded successfully to {bucket_name}/{prefix}")
         except S3Error as e:
             self.log.error(f"Error uploading file to MinIO: {e}")
             raise
 
 
-    def download_file(self, bucket_name: str, object_name: str, file_path: str):
+    def download_file(self, bucket_name: str, prefix: str, file_path: str):
         try:
-            self.client.fget_object(bucket_name, object_name, file_path)
-            self.log.info(f"File {object_name} downloaded successfully to {file_path}")
+            self.client.fget_object(bucket_name, prefix, file_path)
+            self.log.info(f"File {prefix} downloaded successfully to {file_path}")
         except S3Error as e:
             self.log.error(f"Error downloading file from MinIO: {e}")
             raise
