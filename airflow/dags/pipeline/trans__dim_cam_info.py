@@ -85,7 +85,7 @@ with DAG(
         hook.run(f"TRUNCATE TABLE {PSQL_TABLE};")
         
         temp_csv_path = '/tmp/temp_data.tsv'
-        data.to_csv(temp_csv_path, sep='\t', index=False, header=False)
+        data.to_csv(temp_csv_path, sep='\t', index=False, header=True)
         logging.info(f"Write data to {temp_csv_path}")
 
         try:
