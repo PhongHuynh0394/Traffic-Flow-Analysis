@@ -5,7 +5,6 @@ from airflow.decorators import task
 from hooks.minio_hook import MinioHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
 import pytz
 import logging
 
@@ -13,7 +12,10 @@ MINIO_CONN = 'conn_minio__datalake'
 BUCKET = "datalake"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
-CAM_ID = ["58af9a07bd82540010390c3b"]
+
+CAM_ID = ["58af9a07bd82540010390c3b",
+          "56de42f611f398ec0c481288",
+          "58b5752e17139d0010f35d5f"]
 
 params = {
     "id": Param(type="string",
@@ -34,7 +36,7 @@ with DAG(
     schedule_interval="* * * * *",  
     start_date=datetime(2023, 4, 5),
     catchup=False,
-    params=params
+    # params=params
 ) as dag:
 
     start_task = DummyOperator(
@@ -68,6 +70,7 @@ with DAG(
         task_id='end'
     )
 
-    image_crawling_task = image_crawling(id="{{params.id}}")
+    for id in CAM_ID:
+        image_crawling_task = image_crawling.override(task_id=f"crawl_cam_{id}")(id=id)
 
-    start_task >> image_crawling_task >> end_task
+        start_task >> image_crawling_task >> end_task
