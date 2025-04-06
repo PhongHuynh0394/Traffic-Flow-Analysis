@@ -23,7 +23,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-./airflow}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-./airflow}/logs:/opt/airflow/logs
     # - ${AIRFLOW_PROJ_DIR:-./airflow}/config:/opt/airflow/config
-    # - ${AIRFLOW_PROJ_DIR:-./airflow}/dags/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-./airflow}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-./airflow}/init_connection.py:/opt/airflow/init_connection.py
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -37,6 +38,7 @@ networks:
 
 volumes:
   postgres-airflow:
+  traffic-redis-volume:
 
 services:
   # fastapi:
@@ -72,18 +74,24 @@ services:
   postgres:
     image: postgres:13
     container_name: postgresdb
+    hostname: postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+      POSTGRES_CRAWL_DB: raw_crawl
+      POSTGRES_CRAWL_USER: airflow_crawl
     volumes:
       - postgres-airflow:/var/lib/postgresql/data
+      - ./database_init/psql_init.sql:/docker-entrypoint-initdb.d/psql_init.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
       retries: 5
       start_period: 5s
     restart: always
+    ports:
+      - "5432:5432"
     networks:
       - docker-net
 
@@ -125,7 +133,7 @@ services:
     image: *AIRFLOW_IMAGE
     container_name: airflow-scheduler
     <<: *airflow-common
-    command: scheduler
+    command: bash -c "python /opt/airflow/init_connection.py && airflow scheduler"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -299,7 +307,19 @@ services:
         condition: service_healthy
     networks:
       - docker-net
-  
+
+
+  redis:
+    container_name: traffic-redis
+    image: redis:7.2.4
+    ports:
+      - "6379:6379"
+    networks:
+      - docker-net
+    volumes:
+      - traffic-redis-volume:/data
+
+
   notebook:
     container_name: notebook
     build:
