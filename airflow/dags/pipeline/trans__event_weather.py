@@ -23,6 +23,7 @@ with DAG(
         task_id='start'
     )
 
+
     @task(provide_context=True, multiple_outputs=True)
     def weather_crawling(**kwargs):
         from utils.crawling import WeatherCrawler
@@ -31,7 +32,6 @@ with DAG(
         data = crawler.crawl(URL[0])
         logging.info(data)
         return data
-        
         
 
     end_task = DummyOperator(
