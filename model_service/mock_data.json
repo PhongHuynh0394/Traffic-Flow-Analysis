@@ -1,0 +1,28 @@
+{
+    "image_shape": [720, 1280],
+    "total": 3,
+    "objects": [
+      {
+        "class_object": "person",
+        "coordinates": [100, 150, 200, 300],
+        "confidence": 0.92,
+        "class_id": 0,
+        "classname": "person"
+      },
+      {
+        "class_object": "bicycle",
+        "coordinates": [250, 400, 300, 500],
+        "confidence": 0.87,
+        "class_id": 1,
+        "classname": "bicycle"
+      },
+      {
+        "class_object": "bus",
+        "coordinates": [600, 700, 650, 750],
+        "confidence": 0.95,
+        "class_id": 2,
+        "classname": "bus"
+      }
+    ]
+  }
+  
