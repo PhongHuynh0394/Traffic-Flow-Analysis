@@ -14,7 +14,7 @@ URL = [
 with DAG(
     'trans__weather_event',  
     description='Crawling weather event',
-    schedule_interval=None,  
+    schedule_interval="* * * * *",  
     start_date=datetime(2023, 4, 5),  
     catchup=False
 ) as dag:
