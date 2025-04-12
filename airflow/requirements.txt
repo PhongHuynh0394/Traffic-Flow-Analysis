@@ -3,4 +3,5 @@ requests==2.32.3
 bs4==0.0.2
 minio==7.2.15
 python-dotenv==1.1.0
+unicodedata2==16.0.0
 # playwright==1.51.0
