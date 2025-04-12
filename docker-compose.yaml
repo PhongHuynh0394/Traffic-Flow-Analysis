@@ -39,6 +39,8 @@ networks:
 volumes:
   postgres-airflow:
   traffic-redis-volume:
+  minio-volume:
+  minio-config:
 
 services:
   # fastapi:
@@ -260,8 +262,8 @@ services:
     container_name: minio
     restart: always
     volumes:
-      - ./MinIO/storage:/data
-      - ./MinIO/config:/root/.minio
+      - minio-volume:/data
+      - minio-config:/root/.minio
     ports:
       - "9000:9000"
       - "9090:9090"

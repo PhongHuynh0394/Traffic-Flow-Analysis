@@ -55,8 +55,8 @@ class TrafficCrawler(BaseCrawler):
             with requests.Session() as session:
                 _ = session.get(self._BASE_URL) # warmup to get cookies
                 response = session.request("POST", self._cam_info_url, json=payload, headers=headers)
-                with open("t.txt", "w") as f:
-                    f.write(response.text)
+                # with open("t.txt", "w") as f:
+                #     f.write(response.text)
                 data = self._extract_cam_info(response.text)
                 return data
 

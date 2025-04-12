@@ -2,4 +2,5 @@ pandas==2.2.3
 requests==2.32.3
 bs4==0.0.2
 minio==7.2.15
-playwright==1.51.0
+# playwright==1.51.0
+unicodedata2==16.0.0
