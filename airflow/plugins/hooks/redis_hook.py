@@ -30,11 +30,9 @@ class RedisHook(BaseHook):
         finally:
             return value
 
-    
     def get(self, key: str) -> Any:
         result = self.client.get(key)
         return json.loads(result) if result else None
-    
 
     def delete(self, key: str):
         try:
