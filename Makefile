@@ -4,7 +4,7 @@ SERVICE ?= none
 
 # Group servies
 AIRFLOW_SERVICES = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
-# KAFKA_SERVICES = kafka
+KAFKA_SERVICES = kafka-b
 # CLICKHOUSE_SERVICES = clickhouse
 ALL_SERVICES = $(AIRFLOW_SERVICES) redis minio minio-client
 COMPOSE_FILE = docker-compose.yaml
