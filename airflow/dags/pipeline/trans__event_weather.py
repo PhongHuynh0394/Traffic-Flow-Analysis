@@ -1,10 +1,13 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.decorators import task
 from datetime import datetime
 # import pendulum
 import logging
 
+PSQL_TABLE = "tbl__raw__dim_weather_info"
+PSQL_CONN_ID = "conn_psql__raw_crawl"
 URL = [
     "https://www.accuweather.com/en/vn/district-1/3554433/current-weather/3554433"
 ]
@@ -28,8 +31,12 @@ with DAG(
     def weather_crawling(**kwargs):
         from utils.crawling import WeatherCrawler
 
+        hook = PostgresHook(postgres_conn_id=PSQL_CONN_ID)
+        query = f"SELECT district_url FROM {PSQL_TABLE} WHERE district = 'Quận 1' AND city = 'Hồ Chí Minh'"
+        url = hook.get_records(query)[0][0]
+
         crawler = WeatherCrawler()
-        data = crawler.crawl(URL[0])
+        data = crawler.crawl(url)
         logging.info(data)
         return data
         
