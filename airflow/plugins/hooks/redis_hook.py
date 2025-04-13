@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 class RedisHook(BaseHook):
     def __init__(self, conn_id: str, *args, **kwargs):
-        super.__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.conn_id = conn_id
         self.client = self._get_client()
     
@@ -17,7 +17,8 @@ class RedisHook(BaseHook):
             host=connection.host,
             port=connection.port or 6379,
             password=connection.password,
-            db=0
+            db=0,
+            decode_responses=True
         )
     
     def set(self, key: str, value: Any, ttl: Optional[int] = None):
@@ -33,6 +34,9 @@ class RedisHook(BaseHook):
     def get(self, key: str) -> Any:
         result = self.client.get(key)
         return json.loads(result) if result else None
+    
+    def get_keys(self, pattern: str):
+        return self.client.keys(pattern)
 
     def delete(self, key: str):
         try:

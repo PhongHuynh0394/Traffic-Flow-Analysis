@@ -3,24 +3,27 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.models.param import Param
 from airflow.decorators import task
 from hooks.minio_hook import MinioHook
+from hooks.redis_hook import RedisHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from datetime import datetime
 import pytz
 import logging
+import pandas as pd
+# import pendulum
 
 MINIO_CONN = 'conn_minio__datalake'
+REDIS_CONN_ID = "conn_redis"
 BUCKET = "datalake"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 
-CAM_ID = ["58af9a07bd82540010390c3b",
-          "56de42f611f398ec0c481288",
-          "58b5752e17139d0010f35d5f"]
-
 params = {
-    "id": Param(type="string",
-                description="Traffic image id",
-                examples=["58af9a07bd82540010390c3b"])
+    "district": Param(
+                type="string",
+                default="Quận 1",
+                description="District of cameras",
+                examples=["Quận 1"])
 }
 
 default_args = {
@@ -36,22 +39,43 @@ with DAG(
     schedule_interval="* * * * *",  
     start_date=datetime(2023, 4, 5),
     catchup=False,
-    # params=params
+    params=params
 ) as dag:
 
     start_task = DummyOperator(
         task_id='start'
     )
 
+    @task
+    def get_cam_id(district: str = "Quận 1") -> list[str]:
+        from utils.preprocess import standard_location
+
+        district_key = standard_location(district)
+
+        key = f"cam:district:{district_key}"
+        redis_hook = RedisHook(REDIS_CONN_ID)
+        data = redis_hook.get(key)
+        if not data: 
+            # Get cam id from psql
+            psql_hook = PostgresHook(postgres_conn_id=PSQL_CONN_ID)
+            query = f"SELECT id FROM {PSQL_TABLE} WHERE district = '{district}'"
+            data = psql_hook.get_records(query)
+            data = [i[0] for i in data]
+
+            # cache redis
+            data = redis_hook.set(key, data)
+
+        return data
+
+
     @task(provide_context=True)
     def image_crawling(id: str):
         from utils.crawling import TrafficCrawler
 
         crawler = TrafficCrawler()
-
         img_data = crawler.crawl(id)
 
-        hook = MinioHook(conn_id=MINIO_CONN)
+        s3_hook = MinioHook(conn_id=MINIO_CONN)
 
         now = datetime.now(pytz.timezone("Asia/Ho_Chi_Minh"))
         date_str = now.strftime("%Y-%m-%d")
@@ -59,7 +83,7 @@ with DAG(
         prefix = f"raw/traffic/{id}/{date_str}/{time_str}.jpg"
 
         try:
-            hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
+            s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
             logging.info(f"Image uploaded successfully to {BUCKET}/{prefix}")
         except Exception as e:
             logging.error(f"Failed to upload image to MinIO: {e}")
@@ -70,7 +94,8 @@ with DAG(
         task_id='end'
     )
 
-    for id in CAM_ID:
-        image_crawling_task = image_crawling.override(task_id=f"crawl_cam_{id}")(id=id)
 
-        start_task >> image_crawling_task >> end_task
+    cam_id = get_cam_id(district="{{params.district}}")
+    image_crawling_task = image_crawling.expand(id=cam_id)
+
+    start_task >> image_crawling_task >> end_task

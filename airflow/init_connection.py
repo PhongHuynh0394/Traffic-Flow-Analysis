@@ -37,9 +37,9 @@ def create_connection(session=None):
         "conn_id": "conn_redis",
         "conn_type": "Redis",
         "host": os.getenv("REDIS_HOST", "redis"),
-        "port": os.getenv("POSTGRES_PORT", 6379),
-        "login": os.getenv("REDIS_USER", ""),
-        "password": os.getenv("REDIS_PASSWORD", "")
+        "port": os.getenv("REDIS_PORT", 6379),
+        "login": os.getenv("REDIS_USER"),
+        "password": os.getenv("REDIS_PASSWORD")
     }
 
     for conn_cf in [minio_conn, psql_conn, redis_conn]:
