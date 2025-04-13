@@ -1,6 +1,9 @@
 import redis
 from airflow.hooks.base_hook import BaseHook
-from typing import Any
+import pickle
+import json
+from typing import Any, Optional
+
 
 class RedisHook(BaseHook):
     def __init__(self, conn_id: str, *args, **kwargs):
@@ -17,8 +20,29 @@ class RedisHook(BaseHook):
             db=0
         )
     
-    def set(self, key: str, value: Any):
-        return self.client.set(key, value)
+    def set(self, key: str, value: Any, ttl: Optional[int] = None):
+        set_value = json.dumps(value)
+        try:
+            self.client.set(key, set_value, ex=ttl)
+            self.log.info(f"Successfully set key {key} to redis")
+        except Exception as e:
+            self.log.error(f"Error set value {value}")
+        finally:
+            return value
+
     
     def get(self, key: str) -> Any:
-        return self.client.get(key)
+        result = self.client.get(key)
+        return json.loads(result) if result else None
+    
+
+    def delete(self, key: str):
+        try:
+            result = self.client.detele(key)
+            if result:
+                self.log.info(f"Successfully delete key {key}")
+            else:
+                self.log.info(f"Key {key} not found")
+        except Exception as e:
+            self.log.error(f"Failed delete key {key}: {e}")
+            raise
