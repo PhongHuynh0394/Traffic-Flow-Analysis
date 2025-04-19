@@ -4,14 +4,14 @@ import os
 from fastapi.responses import JSONResponse
 import json
 from typing import Annotated
-from api import model_router
+from api import counting
 from fastapi.responses import RedirectResponse
 
 
 app = FastAPI()
 
 # Set Router
-app.include_router(model_router.router, prefix="/model", tags=['model'])
+app.include_router(counting.router, prefix="/model", tags=['model'])
 
 @app.get("/")
 async def root():
