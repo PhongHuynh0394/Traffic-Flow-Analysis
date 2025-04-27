@@ -6,3 +6,4 @@ minio==7.2.15
 unicodedata2==16.0.0
 confluent-kafka==2.10.0
 pyspark==3.2.4
+pydruid==0.6.9

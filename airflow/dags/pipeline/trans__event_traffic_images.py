@@ -120,12 +120,10 @@ with DAG(
             isflush=True
         )
 
-               
 
     end_task = DummyOperator(
         task_id='end'
     )
-
 
     cam_id = get_cam_id(district="{{params.district}}")
     image_crawling_task = image_crawling.expand(id=cam_id)
