@@ -5,4 +5,5 @@ minio==7.2.15
 python-dotenv==1.1.0
 unicodedata2==16.0.0
 confluent-kafka==2.10.0
+pendulum==3.1.0
 # playwright==1.51.0

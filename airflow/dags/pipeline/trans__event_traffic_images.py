@@ -4,19 +4,25 @@ from airflow.models.param import Param
 from airflow.decorators import task
 from hooks.minio_hook import MinioHook
 from hooks.redis_hook import RedisHook
+from hooks.kafka_hook import KafkaProducerHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from datetime import datetime
 import pytz
 import logging
 import pandas as pd
-# import pendulum
+import requests
+import pendulum
+import requests
+import json
 
 MINIO_CONN = 'conn_minio__datalake'
 REDIS_CONN_ID = "conn_redis"
 BUCKET = "datalake"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
+KAFKA_TOPIC = "traffic-object-counting"
+MODEL_API = "http://object-counting-api/upload-image"
 
 params = {
     "district": Param(
@@ -32,9 +38,15 @@ default_args = {
     "retries": 0
 }
 
+kafka_config={
+    "bootstrap.servers": "kafka-broker-1:9092",
+    "replication_factor": 1,
+    "num_partitions": 1,
+}
+
 # Initialize the DAG
 with DAG(
-    'trans__traffic_images',  
+    'trans__event_traffic_images',  
     description='Crawling traffic image',
     schedule_interval="* * * * *",  
     start_date=datetime(2023, 4, 5),
@@ -72,14 +84,17 @@ with DAG(
     def image_crawling(id: str):
         from utils.crawling import TrafficCrawler
 
+        # Crawl raw image
         crawler = TrafficCrawler()
         img_data = crawler.crawl(id)
 
+        # Save raw img to S3
         s3_hook = MinioHook(conn_id=MINIO_CONN)
 
         now = datetime.now(pytz.timezone("Asia/Ho_Chi_Minh"))
         date_str = now.strftime("%Y-%m-%d")
         time_str = now.strftime("%H-%M-%S")
+        timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
         prefix = f"raw/traffic/{id}/{date_str}/{time_str}.jpg"
 
         try:
@@ -88,7 +103,24 @@ with DAG(
         except Exception as e:
             logging.error(f"Failed to upload image to MinIO: {e}")
             raise
-        
+
+        # Predict with api
+        files = {'file': ('file.png', img_data, 'image/png')}
+        message = requests.post(MODEL_API, files=files).json()
+        message.update({
+            "timestamp": timestamp_str,
+            "cam_id": id,
+            "img": f"{BUCKET}/{prefix}"
+        })
+            
+        kafka_hook = KafkaProducerHook(config=kafka_config)
+        kafka_hook.produce(
+            topic=KAFKA_TOPIC,
+            value=message,
+            isflush=True
+        )
+
+               
 
     end_task = DummyOperator(
         task_id='end'

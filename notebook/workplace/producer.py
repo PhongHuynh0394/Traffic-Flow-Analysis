@@ -2,7 +2,8 @@ from confluent_kafka import Producer
 import time
 from confluent_kafka.admin import AdminClient, NewTopic
 from confluent_kafka import KafkaException
-
+import requests
+import json
 
 def create_topic(topic_name, num_partitions=1, replication_factor=1):
     admin_client = AdminClient(conf)
@@ -20,6 +21,16 @@ def create_topic(topic_name, num_partitions=1, replication_factor=1):
         print(f"Failed to create topic {topic_name}: {e}")
 
 
+def get_message():
+    url = "http://localhost:8000/upload-image"
+    
+    with open("ai.png", 'rb') as image_file:
+        files = {'file': ('ai.png', image_file, 'image/png')}
+        data = requests.post(url, files=files)
+    
+    return data
+    
+
 if __name__ == "__main__":
     broker = "localhost:9092"
     conf = {
@@ -31,7 +42,10 @@ if __name__ == "__main__":
 
     index = 0
     while True:
-        message = f"message {index}"
+        message = get_message().json()
+        message.update({"index": index})
+        message = json.dumps(message)
+
         producer.produce(topic, value=message)
         print(f"Produced message: {message}")
         index += 1

@@ -1,12 +1,12 @@
 include .env
 
-SERVICE ?= none
+service ?= none
 
 # Group servies
 airflow = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
 kafka = kafka-broker-1
-# CLICKHOUSE_SERVICES = clickhouse
-all = $(airflow) redis minio minio-client
+api = model-api
+ALL_SERVICES = $(airflow) $(kafka) redis minio minio-client
 COMPOSE_FILE = docker-compose.yaml
 
 .PHONY: build up down downall downing restart notebook
