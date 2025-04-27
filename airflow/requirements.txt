@@ -6,4 +6,5 @@ python-dotenv==1.1.0
 unicodedata2==16.0.0
 confluent-kafka==2.10.0
 pendulum==3.1.0
+pyspark==3.2.4
 # playwright==1.51.0

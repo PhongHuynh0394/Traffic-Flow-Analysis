@@ -11,7 +11,6 @@ load_dotenv()
 @provide_session
 def create_connection(session=None):
 
-    # Minio conn
     minio_conn = {
         "conn_id": "conn_minio__datalake",
         "conn_type": "S3",
@@ -22,7 +21,6 @@ def create_connection(session=None):
         "port": os.getenv("MINIO_PORT", 9000)
     }
 
-    # PSQL conn
     psql_conn = {
         "conn_id": "conn_psql__raw_crawl",
         "conn_type": "postgres",
@@ -37,7 +35,7 @@ def create_connection(session=None):
         "conn_id": "conn_redis",
         "conn_type": "Redis",
         "host": os.getenv("REDIS_HOST", "redis"),
-        "port": os.getenv("REDIS_PORT", 6379),
+        "port": int(os.getenv("REDIS_PORT") or 6379),
         "login": os.getenv("REDIS_USER"),
         "password": os.getenv("REDIS_PASSWORD")
     }
