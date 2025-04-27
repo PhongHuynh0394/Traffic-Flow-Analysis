@@ -1,6 +1,5 @@
-python==3.11.11
 fastapi==0.115.12
-numpy==2.2.4
+python-multipart==0.0.20
 opencv_python==4.11.0.86
 pydantic==2.11.3
 ultralytics==8.3.103

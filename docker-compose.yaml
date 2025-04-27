@@ -43,19 +43,20 @@ volumes:
   minio-config:
 
 services:
-  # fastapi:
-  #   build:
-  #     context: ./model_service
-  #   hostname: fastapi
-  #   container_name: fastapi
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     - ./server:/usr/src/app
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - docker-net
+  model-api:
+    build:
+      context: ./model_service
+    image: traffic-api:latest
+    hostname: object-counting-api
+    container_name: object_counting_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./model_service:/usr/src/app
+    env_file:
+      - .env
+    networks:
+      - docker-net
   
   # ui:
   #   build:
