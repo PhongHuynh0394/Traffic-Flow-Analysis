@@ -21,7 +21,7 @@ REDIS_CONN_ID = "conn_redis"
 BUCKET = "datalake"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
-KAFKA_TOPIC = "traffic-object-counting"
+KAFKA_TOPIC = "traffic-object-raw"
 MODEL_API = "http://object-counting-api/upload-image"
 
 params = {
@@ -49,7 +49,7 @@ with DAG(
     'trans__event_traffic_images',  
     description='Crawling traffic image',
     schedule_interval="* * * * *",  
-    start_date=datetime(2023, 4, 5),
+    start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     params=params
 ) as dag:
@@ -91,10 +91,16 @@ with DAG(
         # Save raw img to S3
         s3_hook = MinioHook(conn_id=MINIO_CONN)
 
-        now = datetime.now(pytz.timezone("Asia/Ho_Chi_Minh"))
-        date_str = now.strftime("%Y-%m-%d")
-        time_str = now.strftime("%H-%M-%S")
-        timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        # now = datetime.now(pytz.timezone("Asia/Ho_Chi_Minh"))
+        # date_str = now.strftime("%Y-%m-%d")
+        # time_str = now.strftime("%H-%M-%S")
+        # timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
+        now = pendulum.now("Asia/Ho_Chi_Minh")
+        date_str = now.to_date_string() # 'YYYY-MM-DD'
+        time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
+        timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
+
         prefix = f"raw/traffic/{id}/{date_str}/{time_str}.jpg"
 
         try:

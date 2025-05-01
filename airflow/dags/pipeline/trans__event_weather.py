@@ -3,14 +3,22 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.decorators import task
 from hooks.redis_hook import RedisHook
+from hooks.kafka_hook import KafkaProducerHook
 from airflow.models.param import Param
 from datetime import datetime
-# import pendulum
+import pendulum
 import logging
 
 PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 REDIS_CONN_ID = "conn_redis"
+KAFKA_TOPIC = "weather-raw"
+
+kafka_config={
+    "bootstrap.servers": "kafka-broker-1:9092",
+    "replication_factor": 1,
+    "num_partitions": 1,
+}
 
 params = {
     "district": Param(
@@ -32,7 +40,7 @@ with DAG(
     'trans__weather_event',  
     description='Crawling weather event',
     schedule_interval="* * * * *",  
-    start_date=datetime(2023, 4, 5),  
+    start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     params=params
 
@@ -70,6 +78,12 @@ with DAG(
         logging.info(data)
 
         # send to kafka
+        kafka_hook = KafkaProducerHook(config=kafka_config)
+        kafka_hook.produce(
+            topic=KAFKA_TOPIC,
+            value=data,
+            isflush=True
+        )
         return data
         
 

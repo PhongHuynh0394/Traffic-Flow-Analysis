@@ -3,7 +3,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.decorators import task
-from datetime import datetime
+import pendulum
 import pandas as pd
 import logging
 import os
@@ -25,7 +25,7 @@ with DAG(
     default_args=default_args,
     description='Crawl dim weather info',
     schedule_interval=None,  
-    start_date=datetime(2023, 4, 5),  
+    start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,  
 ) as dag:
 
@@ -48,7 +48,7 @@ with DAG(
     )
 
 
-    @task(provide_context=True)
+    @task(provide_context=True, retries=3, retry_delay=pendulum.duration(seconds=5))
     def weather_id_crawling():
         from utils.crawling import WeatherCrawler
 

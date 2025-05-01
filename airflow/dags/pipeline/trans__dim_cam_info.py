@@ -4,7 +4,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.models.param import Param
 from airflow.decorators import task
-from datetime import datetime
+import pendulum
 import pandas as pd
 import logging
 import os
@@ -26,7 +26,7 @@ with DAG(
     default_args=default_args,
     description='Crawling traffic image id',
     schedule_interval=None,  
-    start_date=datetime(2023, 4, 5),  
+    start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,  
     params={"limit": Param(default=-1, type="integer")}
 ) as dag:
