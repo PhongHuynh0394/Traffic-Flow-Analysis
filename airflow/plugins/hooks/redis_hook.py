@@ -1,5 +1,6 @@
 import redis
-from airflow.hooks.base_hook import BaseHook
+# from airflow.hooks.base_hook import BaseHook
+from airflow.hooks.base import BaseHook
 import pickle
 import json
 from typing import Any, Optional

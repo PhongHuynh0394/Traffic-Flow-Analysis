@@ -22,7 +22,7 @@ BUCKET = "datalake"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
-MODEL_API = "http://object-counting-api/upload-image"
+MODEL_API = "http://object-counting-api:8000/upload-image"
 
 params = {
     "district": Param(
@@ -39,7 +39,7 @@ default_args = {
 }
 
 kafka_config={
-    "bootstrap.servers": "kafka-broker-1:9092",
+    "bootstrap.servers": "kafka-broker-1:9094",
     "replication_factor": 1,
     "num_partitions": 1,
 }

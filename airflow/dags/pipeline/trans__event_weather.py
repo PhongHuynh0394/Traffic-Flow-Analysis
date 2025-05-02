@@ -15,7 +15,7 @@ REDIS_CONN_ID = "conn_redis"
 KAFKA_TOPIC = "weather-raw"
 
 kafka_config={
-    "bootstrap.servers": "kafka-broker-1:9092",
+    "bootstrap.servers": "kafka-broker-1:9094",
     "replication_factor": 1,
     "num_partitions": 1,
 }
