@@ -91,11 +91,6 @@ with DAG(
         # Save raw img to S3
         s3_hook = MinioHook(conn_id=MINIO_CONN)
 
-        # now = datetime.now(pytz.timezone("Asia/Ho_Chi_Minh"))
-        # date_str = now.strftime("%Y-%m-%d")
-        # time_str = now.strftime("%H-%M-%S")
-        # timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
         now = pendulum.now("Asia/Ho_Chi_Minh")
         date_str = now.to_date_string() # 'YYYY-MM-DD'
         time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
