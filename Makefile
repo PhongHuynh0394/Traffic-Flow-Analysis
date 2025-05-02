@@ -3,7 +3,7 @@ include .env
 service ?= none
 
 # Group servies
-airflow = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
+airflow = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init redis
 kafka = kafka-broker-1
 api = model-api
 ALL_SERVICES = $(airflow) $(kafka) $(api) redis minio minio-client

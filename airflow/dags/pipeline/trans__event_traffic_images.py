@@ -89,7 +89,7 @@ with DAG(
         img_data = crawler.crawl(id)
 
         # Save raw img to S3
-        s3_hook = MinioHook(conn_id=MINIO_CONN)
+        # s3_hook = MinioHook(conn_id=MINIO_CONN)
 
         now = pendulum.now("Asia/Ho_Chi_Minh")
         date_str = now.to_date_string() # 'YYYY-MM-DD'
@@ -98,12 +98,12 @@ with DAG(
 
         prefix = f"raw/traffic/{id}/{date_str}/{time_str}.jpg"
 
-        try:
-            s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
-            logging.info(f"Image uploaded successfully to {BUCKET}/{prefix}")
-        except Exception as e:
-            logging.error(f"Failed to upload image to MinIO: {e}")
-            raise
+        # try:
+        #     s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
+        #     logging.info(f"Image uploaded successfully to {BUCKET}/{prefix}")
+        # except Exception as e:
+        #     logging.error(f"Failed to upload image to MinIO: {e}")
+        #     raise
 
         # Predict with api
         files = {'file': ('file.png', img_data, 'image/png')}
