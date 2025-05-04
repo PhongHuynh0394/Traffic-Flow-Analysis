@@ -40,6 +40,12 @@ def create_connection(session=None):
         "password": os.getenv("REDIS_PASSWORD")
     }
 
+    gcp_conn = {
+        "conn_id": "conn_gcp",
+        "conn_type": "Google Cloud",
+        "keyfile json": os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+    }
+
     for conn_cf in [minio_conn, psql_conn, redis_conn]:
 
         # Check if the connection already exists

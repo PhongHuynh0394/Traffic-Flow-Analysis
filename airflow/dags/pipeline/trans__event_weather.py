@@ -77,6 +77,12 @@ with DAG(
         data = crawler.crawl(url)
         logging.info(data)
 
+        now = pendulum.now("Asia/Ho_Chi_Minh")
+        timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
+        data.update({
+            "timestamp": timestamp_str,
+        })
+
         # send to kafka
         kafka_hook = KafkaProducerHook(config=kafka_config)
         kafka_hook.produce(

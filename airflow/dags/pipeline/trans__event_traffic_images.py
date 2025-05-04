@@ -3,6 +3,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.models.param import Param
 from airflow.decorators import task
 from hooks.minio_hook import MinioHook
+from hooks.gcs_hook import GCSHook
 from hooks.redis_hook import RedisHook
 from hooks.kafka_hook import KafkaProducerHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
@@ -16,9 +17,10 @@ import pendulum
 import requests
 import json
 
-MINIO_CONN = 'conn_minio__datalake'
+# MINIO_CONN = 'conn_minio__datalake'
+GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"
 REDIS_CONN_ID = "conn_redis"
-BUCKET = "datalake"
+GCS_BUCKET = "traffic_flow_thesis"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
@@ -90,19 +92,23 @@ with DAG(
 
         # Save raw img to S3
         # s3_hook = MinioHook(conn_id=MINIO_CONN)
+        gcs_hook = GCSHook(
+            gcs_credential_env=GCS_CREDENTIAL_ENV,
+            bucket=GCS_BUCKET
+        )
 
         now = pendulum.now("Asia/Ho_Chi_Minh")
         date_str = now.to_date_string() # 'YYYY-MM-DD'
         time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
         timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
 
-        prefix = f"raw/traffic/{id}/{date_str}/{time_str}.jpg"
+        prefix = f"raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
 
         # try:
-        #     s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
-        #     logging.info(f"Image uploaded successfully to {BUCKET}/{prefix}")
+        #     # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
+        #     gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
         # except Exception as e:
-        #     logging.error(f"Failed to upload image to MinIO: {e}")
+        #     logging.error(f"Failed to upload image to GCS: {e}")
         #     raise
 
         # Predict with api
@@ -111,7 +117,7 @@ with DAG(
         message.update({
             "timestamp": timestamp_str,
             "cam_id": id,
-            "img": f"{BUCKET}/{prefix}"
+            "img": f"{GCS_BUCKET}/{prefix}"
         })
             
         kafka_hook = KafkaProducerHook(config=kafka_config)
