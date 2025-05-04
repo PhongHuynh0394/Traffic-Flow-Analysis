@@ -1,4 +1,3 @@
-# TODO: Containerize the system
 ---
 x-airflow-common:
   &airflow-common
@@ -41,6 +40,7 @@ volumes:
   traffic-redis-volume:
   minio-volume:
   minio-config:
+  kafka_data1:
 
 services:
   model-api:
@@ -104,7 +104,7 @@ services:
       context: ./airflow
       dockerfile: Dockerfile
       args:
-        AIRFLOW_IMAGE_NAME: ${AIRFLOW_IMAGE_NAME:-apache/airflow:latest-python3.9}
+        AIRFLOW_IMAGE_NAME: apache/airflow:2.10.5-python3.9
         AIRFLOW_UID: "${UID:-1000}"
     environment:
       <<: *airflow-common-env
@@ -115,6 +115,7 @@ services:
     container_name: airflow-webserver
     <<: *airflow-common
     command: webserver
+    # command: airflow api-server
     ports:
       - "8080:8080"
     healthcheck:
@@ -144,6 +145,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    env_file:
+      - .env
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -342,38 +345,39 @@ services:
       - docker-net
 
 
-  # kafka-broker-1:
-  #   image: bitnami/kafka:latest
-  #   container_name: kafka-broker-1
-  #   environment:
-  #     # KRaft setting
-  #     - KAFKA_CFG_NODE_ID=0
-  #     - KAFKA_KRAFT_CLUSTER_ID=clusterkafka
-  #     - KAFKA_CFG_PROCESS_ROLES=controller,broker
-  #     - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-broker-1:9093,1@kafka-broker-2:9093
-  #     # Listener
-  #     - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-  #     - KAFKA_CFG_LISTENERS=INTERNAL://:9094,CONTROLLER://:9093,EXTERNAL://:9092
-  #     - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka-broker-1:9094,EXTERNAL://localhost:9092
-  #     - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-  #     - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
-  #     # Clustering
-  #     - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=3
-  #     - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=3
-  #     - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=2
-  #   ports: 
-  #     - 9092:9092
-  #     # - 9094:9094
-  #   volumes:
-  #     - kafka_data1:/bitnami/kafka
-  #   networks:
-  #     - kafka_net
-  #   healthcheck:
-  #     test: nc -z localhost 9092 || exit -1
-  #     start_period: 15s
-  #     interval: 5s
-  #     timeout: 10s
-  #     retries: 10
+  kafka-broker-1:
+    image: bitnami/kafka:latest
+    container_name: kafka-broker-1
+    environment:
+      # KRaft setting
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_KRAFT_CLUSTER_ID=clusterkafka
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      # - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-broker-1:9093,1@kafka-broker-2:9093
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-broker-1:9093
+      # Listener
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9094,CONTROLLER://:9093,EXTERNAL://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka-broker-1:9094,EXTERNAL://localhost:9092
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+      # Clustering
+      # - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      # - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=3
+      # - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=2
+    ports: 
+      - 9092:9092
+      # - 9094:9094
+    volumes:
+      - kafka_data1:/bitnami/kafka
+    networks:
+      - docker-net
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   # kafka-broker-2:
   #   image: bitnami/kafka:latest
@@ -399,8 +403,8 @@ services:
   #     - 9095:9095
   #   volumes:
   #     - kafka_data2:/bitnami/kafka
-  #   networks:
-  #     - kafka_net
+    # networks:
+    #   - docker-net
   #   healthcheck:
   #     test: nc -z localhost 9095 || exit -1
   #     start_period: 15s

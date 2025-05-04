@@ -11,7 +11,6 @@ load_dotenv()
 @provide_session
 def create_connection(session=None):
 
-    # Minio conn
     minio_conn = {
         "conn_id": "conn_minio__datalake",
         "conn_type": "S3",
@@ -22,10 +21,9 @@ def create_connection(session=None):
         "port": os.getenv("MINIO_PORT", 9000)
     }
 
-    # PSQL conn
     psql_conn = {
         "conn_id": "conn_psql__raw_crawl",
-        "conn_type": "Postgres",
+        "conn_type": "postgres",
         "host": os.getenv("POSTGRES_HOST", "postgres"),
         "login": os.getenv("POSTGRES_USER", "airflow"),
         "password": os.getenv("POSTGRES_PASSWORD", "airflow"),
@@ -33,7 +31,22 @@ def create_connection(session=None):
         "port": os.getenv("POSTGRES_PORT", 5432)
     }
 
-    for conn_cf in [minio_conn, psql_conn]:
+    redis_conn = {
+        "conn_id": "conn_redis",
+        "conn_type": "Redis",
+        "host": os.getenv("REDIS_HOST", "redis"),
+        "port": int(os.getenv("REDIS_PORT") or 6379),
+        "login": os.getenv("REDIS_USER"),
+        "password": os.getenv("REDIS_PASSWORD")
+    }
+
+    gcp_conn = {
+        "conn_id": "conn_gcp",
+        "conn_type": "Google Cloud",
+        "keyfile json": os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+    }
+
+    for conn_cf in [minio_conn, psql_conn, redis_conn]:
 
         # Check if the connection already exists
         conn = session.query(Connection).filter_by(conn_id=conn_cf["conn_id"]).first()

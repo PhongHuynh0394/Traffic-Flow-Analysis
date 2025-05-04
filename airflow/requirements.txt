@@ -4,4 +4,9 @@ bs4==0.0.2
 minio==7.2.15
 python-dotenv==1.1.0
 unicodedata2==16.0.0
+confluent-kafka==2.10.0
+pendulum==3.1.0
+pyspark==3.2.4
+pydruid==0.6.9
+google-cloud-storage==3.1.0
 # playwright==1.51.0

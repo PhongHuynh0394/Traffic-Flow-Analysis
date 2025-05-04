@@ -1,6 +1,6 @@
-ARG AIRFLOW_IMAGE_NAME
+ARG AIRFLOW_IMAGE_NAME=apache/airflow:2.10.5-python3.9
 ARG AIRFLOW_UID
-FROM ${AIRFLOW_IMAGE_NAME:-apache/airflow:latest-python3.9}
+FROM ${AIRFLOW_IMAGE_NAME}
 
 ENV AIRFLOW_HOME=/opt/airflow
 
