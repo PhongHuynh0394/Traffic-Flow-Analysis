@@ -24,7 +24,7 @@ GCS_BUCKET = "traffic_flow_thesis"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
-MODEL_API = "http://object-counting-api:8000/upload-image"
+MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
 
 params = {
     "district": Param(

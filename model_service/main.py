@@ -4,7 +4,7 @@ import os
 from fastapi.responses import JSONResponse
 import json
 from typing import Annotated
-# from api import counting
+from api import counting
 from api import healthcheck
 from fastapi.responses import RedirectResponse
 
@@ -12,7 +12,7 @@ from fastapi.responses import RedirectResponse
 app = FastAPI()
 
 # Set Router
-# app.include_router(counting.router, prefix="/model", tags=['model'])
+app.include_router(counting.router, prefix="/model", tags=['model'])
 app.include_router(healthcheck.router)
 
 @app.get("/")

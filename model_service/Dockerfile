@@ -2,18 +2,23 @@ FROM python:3.11.11-slim-bullseye
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt ./
-USER root
-
-RUN apt update && apt install -y \
-    build-essential \
-    python3-dev \
-    libffi-dev \
-    vim \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+# Copy requirements first
+COPY requirements.txt ./
 
+# Install Python packages
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application
 COPY . .
 
 EXPOSE 8000
