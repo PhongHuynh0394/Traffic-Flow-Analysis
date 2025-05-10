@@ -1,6 +1,5 @@
 import minio
 from io import BytesIO
-# from airflow.hooks.base_hook import BaseHook
 from airflow.hooks.base import BaseHook
 from minio import Minio
 from minio.error import S3Error

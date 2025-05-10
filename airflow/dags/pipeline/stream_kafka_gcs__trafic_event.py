@@ -1,14 +1,6 @@
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.decorators import task
-from hooks.redis_hook import RedisHook
-from hooks.kafka_hook import KafkaProducerHook
-from airflow.models.param import Param
 from operators.kafka2gcs import KafkaToGCSOperator
-from datetime import datetime
 import pendulum
-import logging
 
 GCS_BUCKET = "traffic_flow_thesis"
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"

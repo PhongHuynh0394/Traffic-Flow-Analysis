@@ -1,14 +1,6 @@
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.decorators import task
-from hooks.redis_hook import RedisHook
-from hooks.kafka_hook import KafkaProducerHook
-from airflow.models.param import Param
 from operators.kafka2gcs import KafkaToGCSOperator
-from datetime import datetime
 import pendulum
-import logging
 
 GCS_BUCKET = "traffic_flow_thesis"
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"
@@ -21,9 +13,16 @@ kafka_config = {
     'enable.auto.commit': True,
 }
 
+default_args = {
+    "owner": "PhongHuynh0394",
+    "depends_on_past": False,
+    "retries": 0
+}
+
 with DAG(
     'stream_kafka_gcs__weather_event',  
     description='Sync Kafka to GCS',
+    default_args=default_args,
     schedule_interval="* * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,

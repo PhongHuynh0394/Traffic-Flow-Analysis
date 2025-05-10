@@ -2,15 +2,10 @@ from google.cloud import storage
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from google.oauth2 import service_account
-from airflow.hooks.base_hook import BaseHook
 from confluent_kafka import Consumer, KafkaException
 import pyarrow as pa
 import pyarrow.parquet as pq
-from typing import Optional
-import logging
-from datetime import datetime
 import pendulum
-import pandas as pd
 import json
 import os
 from io import BytesIO

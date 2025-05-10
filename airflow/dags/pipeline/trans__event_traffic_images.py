@@ -24,7 +24,8 @@ GCS_BUCKET = "traffic_flow_thesis"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
-MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+MODEL_API = "http://object-counting-api:8000/upload_image"
 
 params = {
     "district": Param(
@@ -35,7 +36,7 @@ params = {
 }
 
 default_args = {
-    "owner": "phonghuynh",
+    "owner": "PhongHuynh0394",
     "depends_on_past": False,
     "retries": 0
 }
@@ -50,6 +51,7 @@ kafka_config={
 with DAG(
     'trans__event_traffic_images',  
     description='Crawling traffic image',
+    default_args=default_args,
     schedule_interval="* * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
