@@ -37,7 +37,6 @@ with DAG(
 
         conf = (SparkConf().setAppName("Weather-Kafka-Druid")
             .set("spark.executor.memory", "2g")
-            # .set("spark.driver.memory", "2g")
             .set("spark.jars.packages", ",".join(packages))
             .setMaster("local[*]")
             )
