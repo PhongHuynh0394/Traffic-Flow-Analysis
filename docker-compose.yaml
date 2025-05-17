@@ -41,6 +41,7 @@ volumes:
   minio-volume:
   minio-config:
   kafka_data1:
+  druid_data:
 
 services:
   model-api:
@@ -324,6 +325,21 @@ services:
       - docker-net
     volumes:
       - traffic-redis-volume:/data
+  
+  druid:
+    build:
+      context: ./druid
+    image: traffic-druid:latest
+    hostname: druid
+    ports:
+      - "8888:8888"
+      - "8081:8081"
+    container_name: druid-nano
+    volumes:
+      - druid_data:/opt/druid/var
+    networks:
+      - docker-net
+
 
 
   notebook:
