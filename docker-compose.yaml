@@ -334,7 +334,7 @@ services:
     ports:
       - "8888:8888"
       - "8081:8081"
-    container_name: druid-nano
+    container_name: druid
     volumes:
       - druid_data:/opt/druid/var
     networks:
