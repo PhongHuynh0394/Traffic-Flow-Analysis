@@ -395,6 +395,21 @@ services:
       timeout: 10s
       retries: 10
 
+  kafka-ui:
+      image: provectuslabs/kafka-ui
+      container_name: kafka-ui
+      networks:
+        - docker-net
+      depends_on: 
+        - kafka-broker-1
+      ports:
+        - "7777:8080"
+      restart: always
+      environment:
+        - KAFKA_CLUSTERS_0_NAME=LocalKafka
+        - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-broker-1:9094
+        # - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+
   # kafka-broker-2:
   #   image: bitnami/kafka:latest
   #   container_name: kafka_broker-2
