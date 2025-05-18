@@ -24,8 +24,8 @@ GCS_BUCKET = "traffic_flow_thesis"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
-# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
-MODEL_API = "http://object-counting-api:8000/upload_image"
+MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+# MODEL_API = "http://object-counting-api:8000/upload-image"
 
 params = {
     "district": Param(
@@ -106,12 +106,12 @@ with DAG(
 
         prefix = f"raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
 
-        # try:
-        #     # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
-        #     gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
-        # except Exception as e:
-        #     logging.error(f"Failed to upload image to GCS: {e}")
-        #     raise
+        try:
+            # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
+            gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
+        except Exception as e:
+            logging.error(f"Failed to upload image to GCS: {e}")
+            raise
 
         # Predict with api
         files = {'file': ('file.png', img_data, 'image/png')}
