@@ -1,28 +1,177 @@
 {
-    "image_shape": [720, 1280],
-    "total": 3,
+    "image_shape": [
+      520,
+      780
+    ],
+    "total": 14,
     "objects": [
       {
-        "class_object": "person",
-        "coordinates": [100, 150, 200, 300],
+        "class_object": "car",
+        "coordinates": [
+          82.9703598022461,
+          237.76649475097656,
+          209.4219207763672,
+          344.0583801269531
+        ],
         "confidence": 0.92,
-        "class_id": 0,
-        "classname": "person"
-      },
-      {
-        "class_object": "bicycle",
-        "coordinates": [250, 400, 300, 500],
-        "confidence": 0.87,
-        "class_id": 1,
-        "classname": "bicycle"
-      },
-      {
-        "class_object": "bus",
-        "coordinates": [600, 700, 650, 750],
-        "confidence": 0.95,
         "class_id": 2,
-        "classname": "bus"
+        "classname": "car"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          505.6070251464844,
+          203.53518676757812,
+          615.06005859375,
+          285.1114807128906
+        ],
+        "confidence": 0.92,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          420.4852600097656,
+          142.55026245117188,
+          511.4957580566406,
+          213.3460693359375
+        ],
+        "confidence": 0.9,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          46.92625427246094,
+          199.24346923828125,
+          151.4950408935547,
+          285.14703369140625
+        ],
+        "confidence": 0.9,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          2.3581387996673584,
+          142.93353271484375,
+          96.50723266601562,
+          223.14027404785156
+        ],
+        "confidence": 0.9,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "motorcycle",
+        "coordinates": [
+          414.7256164550781,
+          397.06689453125,
+          485.3777770996094,
+          498.4227294921875
+        ],
+        "confidence": 0.82,
+        "class_id": 3,
+        "classname": "motorcycle"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          23.55613136291504,
+          59.290252685546875,
+          82.2733383178711,
+          104.58343505859375
+        ],
+        "confidence": 0.77,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "motorcycle",
+        "coordinates": [
+          364.6097717285156,
+          118.98979949951172,
+          395.5016174316406,
+          168.3159637451172
+        ],
+        "confidence": 0.77,
+        "class_id": 3,
+        "classname": "motorcycle"
+      },
+      {
+        "class_object": "motorcycle",
+        "coordinates": [
+          302.5030212402344,
+          272.6278381347656,
+          347.2958068847656,
+          344.0773620605469
+        ],
+        "confidence": 0.76,
+        "class_id": 3,
+        "classname": "motorcycle"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          743.28564453125,
+          66.29915618896484,
+          779.5778198242188,
+          109.88090515136719
+        ],
+        "confidence": 0.74,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "car",
+        "coordinates": [
+          0.1473575234413147,
+          120.41496276855469,
+          31.30733299255371,
+          178.55226135253906
+        ],
+        "confidence": 0.71,
+        "class_id": 2,
+        "classname": "car"
+      },
+      {
+        "class_object": "motorcycle",
+        "coordinates": [
+          256.4541931152344,
+          47.82329177856445,
+          278.7579040527344,
+          82.32810974121094
+        ],
+        "confidence": 0.66,
+        "class_id": 3,
+        "classname": "motorcycle"
+      },
+      {
+        "class_object": "motorcycle",
+        "coordinates": [
+          194.16665649414062,
+          28.07347297668457,
+          209.670654296875,
+          53.085853576660156
+        ],
+        "confidence": 0.6,
+        "class_id": 3,
+        "classname": "motorcycle"
+      },
+      {
+        "class_object": "truck",
+        "coordinates": [
+          141.0401611328125,
+          4.61924934387207,
+          184.4933624267578,
+          41.80704116821289
+        ],
+        "confidence": 0.33,
+        "class_id": 7,
+        "classname": "truck"
       }
     ]
-  }
-  
+}

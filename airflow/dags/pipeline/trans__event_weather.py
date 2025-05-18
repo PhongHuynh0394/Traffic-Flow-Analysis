@@ -20,6 +20,12 @@ kafka_config={
     "num_partitions": 1,
 }
 
+default_args = {
+    "owner": "PhongHuynh0394",
+    "depends_on_past": False,
+    "retries": 0
+}
+
 params = {
     "district": Param(
                 type="string",
@@ -39,11 +45,11 @@ params = {
 with DAG(
     'trans__weather_event',  
     description='Crawling weather event',
+    default_args=default_args,
     schedule_interval="* * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     params=params
-
 ) as dag:
 
     start_task = DummyOperator(

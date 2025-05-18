@@ -14,7 +14,7 @@ PSQL_CONN_ID = "conn_psql__raw_crawl"
 
 
 default_args = {
-    "owner": "phonghuynh",
+    "owner": "PhongHuynh0394",
     "depends_on_past": False,
     "retries": 0
 }
