@@ -1,4 +1,5 @@
 from ..basecrawler import BaseCrawler
+from .constant import CAMERA_DISTRICT_MAPPING
 import pandas as pd
 import json
 import os
@@ -55,8 +56,6 @@ class TrafficCrawler(BaseCrawler):
             with requests.Session() as session:
                 _ = session.get(self._BASE_URL, headers={"User-Agent": self.ua_rotator.rotate()}) # warmup to get cookies
                 response = session.request("POST", self._cam_info_url, json=payload, headers=headers)
-                # with open("t.txt", "w") as f:
-                #     f.write(response.text)
                 data = self._extract_cam_info(response.text)
                 return data
 
@@ -70,7 +69,33 @@ class TrafficCrawler(BaseCrawler):
             json_data = json.loads(match)
             template = {data['Name']: data['Value'] for data in json_data}
             result.append(template)
-        return result
+
+        # Lat Long extract
+        pattern = r'\[(.*?new Ajax\.Web\.DataTable\(\[\["GeoId","System\.Object"\],\["Shape","System\.Object"\](?:,\["[^"]+","System\.Object"\])*?\],\[\["([0-9a-f-]{36})","(POINT\(\d+\.\d+ \d+\.\d+\))"(?:,null)*?(?:,"[^"]*?")?\]\]\).*?)\]'
+        entries = re.finditer(pattern, text)
+
+        coordinates = {}
+        for entry_match in entries:
+            entry_content = entry_match.group(1)
+            # Extract CamId (third field in the entry, assuming quoted string)
+            camid_pattern = r'"[^"]+",null,"([0-9a-f]{24})"'
+            camid_match = re.search(camid_pattern, entry_content)
+            if camid_match:
+                camid = camid_match.group(1)
+                # Extract GeoId and Shape from the nested DataTable
+                shape = entry_match.group(3)
+                shape = shape.replace("POINT(", "").replace(")", "").split(" ") 
+                coordinates.update({
+                    camid: shape
+                })
+        
+        final = [{
+            **cam, 
+            "longitude": coordinates.get(cam['CamId'], (None, None))[0],
+            "latitude": coordinates.get(cam['CamId'], (None, None))[1]} 
+            for cam in result]
+
+        return final
     
     
     def crawl(self, id: str):

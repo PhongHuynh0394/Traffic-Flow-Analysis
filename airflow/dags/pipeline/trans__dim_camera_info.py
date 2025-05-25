@@ -22,7 +22,7 @@ default_args = {
 
 
 with DAG(
-    'trans__traffic_image_id',  
+    'trans__dim_camera_info',
     default_args=default_args,
     description='Crawling traffic image id',
     schedule_interval=None,  
@@ -38,13 +38,20 @@ with DAG(
     create_table_psql = SQLExecuteQueryOperator(
         task_id="create_psql_table",
         conn_id=PSQL_CONN_ID,
-        sql=f"CREATE TABLE IF NOT EXISTS {PSQL_TABLE} (id varchar(255) PRIMARY KEY, location varchar(255), district varchar(255));"
+        sql=f"""CREATE TABLE IF NOT EXISTS {PSQL_TABLE} (
+                    id varchar(255) PRIMARY KEY, 
+                    location varchar(255), 
+                    district varchar(255),
+                    longitude varchar(255),
+                    latitude varchar(255)
+                );"""
     )
 
 
     @task(provide_context=True)
     def cam_id_crawling(limit: int = -1):
         from utils.crawling import TrafficCrawler
+        from utils.crawling.traffic.constant import CAMERA_DISTRICT_MAPPING
 
         crawler = TrafficCrawler()
         data = crawler.get_cam_info(limit=limit)
@@ -55,9 +62,10 @@ with DAG(
             "DisplayName": "location",
             "Disctrict": "district"
         }, inplace=True)
-        df.fillna(value="unknown", inplace=True)
+        df['district'] = df['district'].fillna(df['id'].map(CAMERA_DISTRICT_MAPPING))
+        # df.fillna(value="unknown", inplace=True)
 
-        return df[['id', 'location', 'district']]
+        return df[['id', 'location', 'district', 'longitude', 'latitude']]
 
 
     @task()
