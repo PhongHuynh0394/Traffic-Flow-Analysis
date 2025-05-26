@@ -29,22 +29,22 @@ class GCSHook(BaseHook):
     def upload_file(self, file_path, destination_blob_name):
         blob = self.bucket.blob(destination_blob_name)
         blob.upload_from_filename(file_path)
-        self.log.info(f"Uploaded {file_path} to gs://{self.bucket_name}/{destination_blob_name}")
+        self.log.info(f"Uploaded {file_path} to gs://{self.bucket}/{destination_blob_name}")
 
 
     def download_file(self, source_blob_name, destination_file_name):
         blob = self.bucket.blob(source_blob_name)
         blob.download_to_filename(destination_file_name)
-        self.log.info(f"Downloaded gs://{self.bucket_name}/{source_blob_name} to {destination_file_name}")
+        self.log.info(f"Downloaded gs://{self.bucket}/{source_blob_name} to {destination_file_name}")
     
 
     def delete_file(self, blob_name):
         blob = self.bucket.blob(blob_name)
         try:
             blob.delete()
-            self.log.info(f"Deleted gs://{self.bucket_name}/{blob_name}")
+            self.log.info(f"Deleted gs://{self.bucket}/{blob_name}")
         except Exception as e:
-            self.log.error(f"Error deleting gs://{self.bucket_name}/{blob_name}: {e}")
+            self.log.error(f"Error deleting gs://{self.bucket}/{blob_name}: {e}")
     
     
     def is_file_exists(self, blob_name):
@@ -52,7 +52,7 @@ class GCSHook(BaseHook):
         return blob.exists()
 
     def list_blobs(self, prefix=None):
-        blobs = self.client.list_blobs(self.bucket_name, prefix=prefix)
+        blobs = self.client.list_blobs(self.bucket, prefix=prefix)
         return blobs
     
     def upload_bytes(self, data: bytes, destination_blob_name: str, content_type: str = "application/octet-stream"):

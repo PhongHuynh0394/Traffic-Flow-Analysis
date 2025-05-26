@@ -49,7 +49,8 @@ with DAG(
     schedule_interval="* * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
-    params=params
+    params=params,
+    tags=["producer", "raw"]
 ) as dag:
 
     start_task = DummyOperator(
