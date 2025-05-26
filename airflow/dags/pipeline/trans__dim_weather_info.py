@@ -3,11 +3,13 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.decorators import task
+
 import pendulum
 import pandas as pd
 import logging
 import os
 import time
+
 
 PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
@@ -26,7 +28,8 @@ with DAG(
     description='Crawl dim weather info',
     schedule_interval=None,  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
-    catchup=False,  
+    catchup=False,
+    tags=["crawl", "dim"]
 ) as dag:
 
     start_task = DummyOperator(
