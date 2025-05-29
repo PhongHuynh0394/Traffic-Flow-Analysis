@@ -6,16 +6,13 @@ from hooks.minio_hook import MinioHook
 from hooks.gcs_hook import GCSHook
 from hooks.redis_hook import RedisHook
 from hooks.kafka_hook import KafkaProducerHook
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+# from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from datetime import datetime
-import pytz
 import logging
-import pandas as pd
 import requests
 import pendulum
 import requests
-import json
 
 # MINIO_CONN = 'conn_minio__datalake'
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"

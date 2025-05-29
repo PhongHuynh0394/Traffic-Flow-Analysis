@@ -10,7 +10,6 @@ import pendulum
 import pandas as pd
 import logging
 import os
-import time
 
 
 GCS_BUCKET = "traffic_flow_thesis"
