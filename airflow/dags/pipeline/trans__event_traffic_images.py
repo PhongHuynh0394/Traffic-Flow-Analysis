@@ -138,8 +138,11 @@ with DAG(
 
     for district in dag.params["district"]:
         cam_id = get_cam_id(district=district)
-        image_crawling_task = image_crawling.expand(id=cam_id).override(
-            task_id=f"crawling__{district.replace("Quận ", "district_")}"
-        )
+        image_crawling_task = image_crawling \
+                                .partial(district=district) \
+                                .expand(id=cam_id) \
+                                .override(
+                                    task_id=f"crawling__{district.replace("Quận ", "district_")}"
+                                )
 
         start_task >> image_crawling_task >> end_task
