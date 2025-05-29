@@ -23,7 +23,7 @@ default_args = {
 
 
 with DAG(
-    'trans__dim_weather_info',  
+    'trans_ex_gcs__dim_weather_info',  
     default_args=default_args,
     description='Crawl dim weather info',
     schedule_interval=None,  

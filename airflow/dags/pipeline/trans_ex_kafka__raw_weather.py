@@ -37,13 +37,12 @@ params = {
                 default="Hồ Chí Minh",
                 description="Weather of which city",
                 examples=["Hồ Chí Minh"])
-
 }
 
 
 # Initialize the DAG
 with DAG(
-    'trans__weather_event',  
+    'trans_ex_kafka__raw_weather',  
     description='Crawling weather event',
     default_args=default_args,
     schedule_interval="* * * * *",  
