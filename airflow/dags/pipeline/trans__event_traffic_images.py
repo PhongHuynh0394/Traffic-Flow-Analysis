@@ -32,7 +32,12 @@ params = {
                 type="array",
                 default=["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 10"],
                 description="District of cameras",
-                examples=["Quận 1"])
+                examples=["Quận 1"]),
+    "limit": Param(
+                type="integer",
+                default=5,
+                description="Number of cameras to crawl"
+    )
 }
 
 default_args = {
@@ -56,7 +61,8 @@ with DAG(
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     params=params,
-    tags=["producer", "raw"]
+    tags=["producer", "raw"],
+    render_template_as_native_obj=True
 ) as dag:
 
     start_task = DummyOperator(
@@ -64,7 +70,7 @@ with DAG(
     )
 
     @task
-    def get_cam_id(district: str = "Quận 1") -> list[str]:
+    def query_cam_id(district: str = "Quận 1", limit: int = 5) -> list[str]:
         from utils.preprocess import standard_location
 
         district_key = standard_location(district)
@@ -74,13 +80,14 @@ with DAG(
         data = redis_hook.get(key)
         if not data: 
             # Get cam id from psql
+            logging.info("Get cam id from psql")
             psql_hook = PostgresHook(postgres_conn_id=PSQL_CONN_ID)
-            query = f"SELECT id FROM {PSQL_TABLE} WHERE district = '{district}'"
+            query = f"SELECT id FROM {PSQL_TABLE} WHERE district = '{district}' LIMIT {limit}"
             data = psql_hook.get_records(query)
             data = [i[0] for i in data]
 
             # cache redis
-            data = redis_hook.set(key, data)
+            data = redis_hook.set(key, data, ttl=300)
 
         return data
 
@@ -137,12 +144,14 @@ with DAG(
     )
 
     for district in dag.params["district"]:
-        cam_id = get_cam_id(district=district)
-        image_crawling_task = image_crawling \
-                                .partial(district=district) \
-                                .expand(id=cam_id) \
-                                .override(
-                                    task_id=f"crawling__{district.replace("Quận ", "district_")}"
-                                )
+        district_name = district.replace("Quận ", "district_")
 
-        start_task >> image_crawling_task >> end_task
+        cam_id = query_cam_id.override(
+            task_id=f"query_cam__{district_name}"
+        )(district=district, limit=dag.params["limit"])
+
+        image_crawling_task = image_crawling.override(task_id=f"crawling__{district_name}") \
+                                            .partial(district=district) \
+                                            .expand(id=cam_id)
+
+        start_task >> cam_id >> image_crawling_task >> end_task
