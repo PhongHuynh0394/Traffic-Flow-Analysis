@@ -14,7 +14,7 @@ kafka_config = {
 }
 
 with DAG(
-    'stream_kafka_gcs__trafic_event',  
+    'sync_kafka_gcs__trafic_event',  
     description='Sync Kafka to GCS',
     schedule_interval="* * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),

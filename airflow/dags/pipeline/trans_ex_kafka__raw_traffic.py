@@ -54,7 +54,7 @@ kafka_config={
 
 # Initialize the DAG
 with DAG(
-    'trans__event_traffic_images',  
+    'trans_ex_kafka__raw_traffic',
     description='Crawling traffic image',
     default_args=default_args,
     schedule_interval="* * * * *",  

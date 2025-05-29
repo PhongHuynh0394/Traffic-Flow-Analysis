@@ -20,7 +20,7 @@ default_args = {
 }
 
 with DAG(
-    'stream_kafka_gcs__weather_event',  
+    'sync_kafka_gcs__weather_event',  
     description='Sync Kafka to GCS',
     default_args=default_args,
     schedule_interval="* * * * *",  
