@@ -25,7 +25,7 @@ default_args = {
 
 
 with DAG(
-    'trans__dim_camera_info',
+    'trans_ex_psql__dim_camera_info',
     default_args=default_args,
     description='Crawling traffic image id',
     schedule_interval=None,  
