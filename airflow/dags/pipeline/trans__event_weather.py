@@ -28,8 +28,8 @@ default_args = {
 
 params = {
     "district": Param(
-                type="string",
-                default="Quận 1",
+                type="array",
+                default=["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 10"],
                 description="Weather of which district",
                 examples=["Quận 1"]),
     "city": Param(
@@ -58,7 +58,7 @@ with DAG(
     )
 
     @task(provide_context=True)
-    def get_weather_url(city: str = "Hồ Chí Minh", district: str = 'Quận 1'):
+    def get_weather_url(city: str = "Hồ Chí Minh", district: str = "Quận 1"):
         from utils.preprocess import standard_location
 
         key = f"weather:{standard_location(city)}:{standard_location(district)}"
@@ -71,13 +71,13 @@ with DAG(
             data = hook.get_records(query)[0][0]
 
             # cache
-            redis_hook.set(key, data)
+            redis_hook.set(key, data, ttl=300)
 
         return data
 
 
     @task(provide_context=True, multiple_outputs=True)
-    def weather_crawling(url: str):
+    def weather_crawling(url: str, district: str):
         from utils.crawling import WeatherCrawler
 
         crawler = WeatherCrawler()
@@ -88,6 +88,7 @@ with DAG(
         timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
         data.update({
             "timestamp": timestamp_str,
+            "district": district
         })
 
         # send to kafka
@@ -104,7 +105,14 @@ with DAG(
         task_id='end'
     )
 
-    weather_url = get_weather_url(district="{{params.district}}", city="{{params.city}}")
-    weather_crawling_task = weather_crawling(weather_url)
 
-    start_task >> weather_url >> weather_crawling_task >> end_task
+    for district in dag.params["district"]:
+        district_name = district.replace('Quận ', 'district_')
+        weather_url = get_weather_url.override(
+            task_id=f"get_url__{district_name}")(district=district, city="{{params.city}}")
+
+        weather_crawling_task = weather_crawling.override(
+            task_id=f"crawling__{district_name}")(url=weather_url, district=district)
+            
+
+        start_task >> weather_url >> weather_crawling_task >> end_task
