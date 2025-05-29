@@ -13,9 +13,10 @@ import logging
 # "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.4"
 
 class SparkIO:
-    def __init__(self, conf: SparkConf = SparkConf(), gcs: bool = False):
-        self.app_anme = conf.get("spark.app.name")
+    def __init__(self, conf: SparkConf = SparkConf(), gcs: bool = True):
+        self.app_name = conf.get("spark.app.name")
         self.master = conf.get("spark.master")
+        self.conf = conf
         self.gcs = gcs
         self._spark = None
     

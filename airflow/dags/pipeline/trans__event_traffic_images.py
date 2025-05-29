@@ -112,7 +112,7 @@ with DAG(
         time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
         timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
 
-        prefix = f"raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
+        prefix = f"raw/raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
 
         try:
             # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)

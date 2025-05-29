@@ -99,7 +99,7 @@ with DAG(
                 gcs_credential_env=GCS_CREDENTIAL_ENV,
                 bucket=GCS_BUCKET
             )
-            prefix = f"raw_dim/{TABLE_NAME}.tsv"
+            prefix = f"raw/raw_dim/{TABLE_NAME}.tsv"
             gcs_hook.upload_file(file_path=data_path, destination_blob_name=prefix)
         except Exception as e:
             logging.error(f"Failed to upload data to GCS: {e}")

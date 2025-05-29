@@ -28,7 +28,7 @@ with DAG(
         kafka_topic=KAFKA_TOPIC,
         kafka_config=kafka_config,
         gcs_credential_env=GCS_CREDENTIAL_ENV,
-        prefix="raw_event",
+        prefix="raw/raw_event",
         poll_timeout=60,
         max_messages=100
     )
