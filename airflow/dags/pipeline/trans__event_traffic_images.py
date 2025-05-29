@@ -29,8 +29,8 @@ MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
 
 params = {
     "district": Param(
-                type="string",
-                default="Quận 1",
+                type="array",
+                default=["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 10"],
                 description="District of cameras",
                 examples=["Quận 1"])
 }
@@ -135,7 +135,10 @@ with DAG(
         task_id='end'
     )
 
-    cam_id = get_cam_id(district="{{params.district}}")
-    image_crawling_task = image_crawling.expand(id=cam_id)
+    for district in dag.params["district"]:
+        cam_id = get_cam_id(district=district)
+        image_crawling_task = image_crawling.expand(id=cam_id).override(
+            task_id=f"crawling__{district.replace("Quận ", "district_")}"
+        )
 
-    start_task >> image_crawling_task >> end_task
+        start_task >> image_crawling_task >> end_task
