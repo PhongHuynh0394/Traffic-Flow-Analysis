@@ -86,7 +86,7 @@ with DAG(
 
 
     @task(provide_context=True)
-    def image_crawling(id: str):
+    def image_crawling(id: str, district: str):
         from utils.crawling import TrafficCrawler
 
         # Crawl raw image
@@ -120,7 +120,8 @@ with DAG(
         message.update({
             "timestamp": timestamp_str,
             "cam_id": id,
-            "img": f"{GCS_BUCKET}/{prefix}"
+            "img": f"{GCS_BUCKET}/{prefix}",
+            "district": district
         })
             
         kafka_hook = KafkaProducerHook(config=kafka_config)
