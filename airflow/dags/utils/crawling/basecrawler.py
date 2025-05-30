@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
 import logging
 import os
+from typing import Optional
 from .ua_rotator import UserAgentRotator
 from .proxy import ProxyManager
 
 class BaseCrawler(ABC):
 
-    def __init__(self, log_level="INFO"):
+    def __init__(self, log_level="INFO", proxy_token: Optional[str] = None):
         self.ua_rotator = UserAgentRotator()
-        # self.proxy_manager = ProxyManager()
+        self.proxy_manager = ProxyManager(webshare_token=proxy_token) if proxy_token is not None else None
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_logger(log_level)
 

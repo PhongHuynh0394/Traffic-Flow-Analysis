@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 class ProxyManager:
     _CACHE_FILE = ".proxy_cache.json"
 
-    def __init__(self, webshare_token: Union[str, List[str]] = None, cachefolder="./cache_proxy"):
+    def __init__(self, webshare_token: Union[str, List[str]], cachefolder="./cache_proxy"):
 
         self._cache_path = os.path.join(cachefolder, self._CACHE_FILE)
         self.blacklist = []
@@ -39,8 +39,8 @@ class ProxyManager:
                 for token in self._webshare_token:
                     provider_list.append(WebshareProvider(token=token))
 
-        if not provider_list:
-            provider_list.append(GimmeproxyProvider())
+        # if not provider_list:
+        #     provider_list.append(GimmeproxyProvider())
 
         return provider_list
     
