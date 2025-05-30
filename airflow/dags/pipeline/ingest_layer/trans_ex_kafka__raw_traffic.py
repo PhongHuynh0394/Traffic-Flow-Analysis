@@ -27,7 +27,7 @@ MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
 params = {
     "district": Param(
                 type="array",
-                default=["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 10"],
+                default=["Quận 1", "Quận 3", "Quận 5", "Quận 10"],
                 description="District of cameras",
                 examples=["Quận 1"]),
     "limit": Param(

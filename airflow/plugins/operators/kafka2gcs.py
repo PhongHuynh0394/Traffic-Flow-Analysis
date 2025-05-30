@@ -3,6 +3,7 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from google.oauth2 import service_account
 from confluent_kafka import Consumer, KafkaException
+from collections import defaultdict
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pendulum
@@ -26,6 +27,8 @@ class KafkaToGCSOperator(BaseOperator):
                  poll_timeout: int = 30, # sync in minutes
                  max_messages: int = 1000,
                  gcs_credential_env: str = "GOOGLE_APPLICATION_CREDENTIALS",
+                 partition_by: str = "timestamp",
+                 partition_level: str = "hour",
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -33,6 +36,8 @@ class KafkaToGCSOperator(BaseOperator):
         self.gcs_credential_env = gcs_credential_env
         self.bucket_name = gcs_bucket
         self.gcs_client = self.__get_gcs_client()
+        self.partition_by = partition_by
+        self.partition_level = partition_level
 
         # Kafka
         self.kafka_topic = kafka_topic
@@ -58,13 +63,15 @@ class KafkaToGCSOperator(BaseOperator):
 
         messages = []
         # start_time = datetime.utcnow()
-        start_time = pendulum.now("Asia/Ho_Chi_Minh")
+        last_msg_time = pendulum.now("Asia/Ho_Chi_Minh")
 
         try:
             while len(messages) < self.max_messages:
+                current_time = pendulum.now("Asia/Ho_Chi_Minh") 
                 msg = consumer.poll(timeout=10)
                 if msg is None:
-                    if (pendulum.now("Asia/Ho_Chi_Minh") - start_time).seconds > self.poll_timeout:
+                    # no message left within poll_timout
+                    if (current_time - last_msg_time).seconds > self.poll_timeout:
                         break
                     continue
 
@@ -76,6 +83,7 @@ class KafkaToGCSOperator(BaseOperator):
                     decoded = msg.value().decode('utf-8')
                     json_msg = json.loads(decoded)
                     messages.append(json_msg)
+                    last_msg_time = current_time # reset polling time
                 except Exception as e:
                     self.log.warning(f"Skipping invalid message: {e}")
                     raise
@@ -91,27 +99,50 @@ class KafkaToGCSOperator(BaseOperator):
             return
 
         # now = datetime.utcnow()
-        now = pendulum.now("Asia/Ho_Chi_Minh")
-        suffix  = uuid.uuid4().hex[:6]
-        partition_path = (
-            f"{self.prefix}/{self.kafka_topic}/"
-            f"year={now.year}/month={now.month:02d}/day={now.day:02d}/hour={now.hour:02d}"
-        )
-        file_name = f"{self.kafka_topic}_{suffix}_{now.strftime('%Y%m%d_%H%M')}.jsonl.gz"
-        full_path = f"{partition_path}/{file_name}"
+        partitions = defaultdict(list)
 
-        # Format and compress
-        jsonl_data = "\n".join(json.dumps(msg) for msg in messages)
-        buffer = BytesIO()
-        with gzip.GzipFile(fileobj=buffer, mode='w') as f:
-            f.write(jsonl_data.encode('utf-8'))
+        # Group messages by partition
+        for message in messages:
+            ts = pendulum.parse(message.get(self.partition_by))
+            partition_level_map = {
+                "year": ts.year,
+                "month": ts.month,
+                "day": ts.day,
+                "hour": ts.hour
+            }
+            partition_path = f"{self.prefix}/{self.kafka_topic}/"
 
-        # Upload
-        bucket = self.gcs_client.bucket(self.bucket_name)
-        blob = bucket.blob(full_path)
-        blob.upload_from_string(buffer.getvalue(), content_type='application/gzip')
+            for level, value in partition_level_map.items():
 
-        self.log.info(f"Uploaded {len(messages)} messages to GCS at gs://{self.bucket_name}/{full_path}")
+                if level == "year":
+                    partition_path = os.path.join(partition_path, f"{level}={value}")
+                else:
+                    partition_path = os.path.join(partition_path, f"{level}={value:02d}")
+
+                if level == self.partition_level:
+                    break
+
+            partitions[partition_path].append(message)
+            
+
+        for partition_path, group_messages in partitions.items():
+            now = pendulum.now("Asia/Ho_Chi_Minh")
+            suffix  = uuid.uuid4().hex[:6]
+            file_name = f"{self.kafka_topic}_{suffix}_{now.strftime('%Y%m%d_%H%M')}.jsonl.gz"
+            full_path = f"{partition_path}/{file_name}"
+
+            # Format and compress
+            jsonl_data = "\n".join(json.dumps(msg) for msg in group_messages)
+            buffer = BytesIO()
+            with gzip.GzipFile(fileobj=buffer, mode='w') as f:
+                f.write(jsonl_data.encode('utf-8'))
+
+            # Upload
+            bucket = self.gcs_client.bucket(self.bucket_name)
+            blob = bucket.blob(full_path)
+            blob.upload_from_string(buffer.getvalue(), content_type='application/gzip')
+
+            self.log.info(f"Uploaded {len(group_messages)} messages to partition GCS at gs://{self.bucket_name}/{full_path}")
     
 
     def execute(self, context):

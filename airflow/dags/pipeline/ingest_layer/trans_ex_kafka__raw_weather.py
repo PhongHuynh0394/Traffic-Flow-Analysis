@@ -29,7 +29,7 @@ default_args = {
 params = {
     "district": Param(
                 type="array",
-                default=["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 10"],
+                default=["Quận 1", "Quận 3", "Quận 5", "Quận 10"],
                 description="Weather of which district",
                 examples=["Quận 1"]),
     "city": Param(
