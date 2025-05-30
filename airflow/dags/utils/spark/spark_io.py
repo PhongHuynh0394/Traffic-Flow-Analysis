@@ -37,16 +37,18 @@ class SparkIO:
         self._spark = spark
 
         return spark
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
 
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         logging.info(f'Stop SparkSession app {self.app_name}')
         if self._spark:
             self._spark.stop()
     
+
     def get_instance(self):
         return self._spark if self._spark else self.__enter__()
     
+
     def close(self):
         self.__exit__(None, None, None)
 

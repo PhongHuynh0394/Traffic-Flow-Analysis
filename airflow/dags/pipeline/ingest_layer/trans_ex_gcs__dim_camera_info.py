@@ -10,7 +10,6 @@ import pendulum
 import pandas as pd
 import logging
 import os
-import time
 
 
 GCS_BUCKET = "traffic_flow_thesis"
@@ -26,7 +25,7 @@ default_args = {
 
 
 with DAG(
-    'trans__dim_camera_info',
+    'trans_ex_psql__dim_camera_info',
     default_args=default_args,
     description='Crawling traffic image id',
     schedule_interval=None,  

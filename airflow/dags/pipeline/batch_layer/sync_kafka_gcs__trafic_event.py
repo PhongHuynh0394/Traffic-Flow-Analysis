@@ -13,9 +13,16 @@ kafka_config = {
     'enable.auto.commit': True,
 }
 
+default_args = {
+    "owner": "PhongHuynh0394",
+    "depends_on_past": False,
+    "retries": 0
+}
+
 with DAG(
     'sync_kafka_gcs__trafic_event',  
     description='Sync Kafka to GCS',
+    default_args=default_args,
     schedule_interval="* * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,

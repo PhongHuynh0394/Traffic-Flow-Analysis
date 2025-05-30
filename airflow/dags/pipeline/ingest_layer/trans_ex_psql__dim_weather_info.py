@@ -77,7 +77,6 @@ with DAG(
         logging.info(f"Write data to {temp_path}")
 
         try:
-            time.sleep(100)
             hook.bulk_load(table=PSQL_TABLE, tmp_file=temp_path)
             logging.info(f"Successfully loaded data into {PSQL_TABLE}")
         except Exception as e:
