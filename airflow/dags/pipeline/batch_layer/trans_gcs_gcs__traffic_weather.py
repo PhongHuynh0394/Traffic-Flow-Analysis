@@ -267,7 +267,6 @@ with DAG(
     description='Transform data in batch layer',
     default_args=default_args,
     schedule_interval="0 23 * * *",
-    # schedule_interval=None,
     start_date=pendulum.datetime(2025, 5, 8, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     tags=['batch', 'gcs', 'transform'],
@@ -287,4 +286,3 @@ with DAG(
     )
 
     start >> [traffic_staging, weather_staging] >> cleaned_layer >> end
-
