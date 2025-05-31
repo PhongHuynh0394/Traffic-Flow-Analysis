@@ -79,6 +79,7 @@ def trans__staging__traffic(**context):
         traffic_schema = T.StructType([
             T.StructField("cam_id", T.StringType()),
             T.StructField("img", T.StringType()),
+            T.StructField("district", T.StringType()),
             T.StructField("timestamp", T.TimestampType()),
             T.StructField("image_shape", T.ArrayType(T.IntegerType())),
             T.StructField("total", T.IntegerType()),
@@ -126,7 +127,7 @@ def trans__staging__traffic(**context):
                         .withColumn("hour_of_day", F.hour(F.col("ts"))) \
                         .withColumn("dt", F.to_date("ts"))
 
-            cols = ["cam_id", "image_w", "image_h",
+            cols = ["cam_id", "district", "image_w", "image_h",
                         "object_name", "object_confidence",
                         "object_bbox", "ts", "hour_of_day", 'dt']
 
@@ -170,8 +171,7 @@ def trans__staging__weather(**context):
         try:
             logging.info(f"Read data batch: {batch} from GCS")
             weather_df = (spark.read
-                # .schema(traffic_schema)
-                .option("multiline", True)
+                .option("multiline", False)
                 .json(gs_path)
             )
         except Exception as e:
@@ -212,7 +212,7 @@ def trans__staging__weather(**context):
 
         # Select relevant fields
         cols = [
-            "ts", "cloud_ceiling_m", "cloud_cover_pct", "dew_point_c",
+            "ts", "district", "cloud_ceiling_m", "cloud_cover_pct", "dew_point_c",
             "humidity_pct", "uv_index", "uv_index_status", "pressure_mb", "realfeel_c",
             "realfeel_shade_c", "temp_c", "visibility_km", "status",
             "wind_kmph", "wind_direction", "wind_gust_kmph", "dt", "hour_of_day"
