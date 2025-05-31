@@ -5,6 +5,7 @@ from airflow.decorators import task
 from hooks.redis_hook import RedisHook
 from hooks.kafka_hook import KafkaProducerHook
 from airflow.models.param import Param
+from airflow.models import Variable
 from datetime import datetime
 import pendulum
 import logging
@@ -13,6 +14,7 @@ PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 REDIS_CONN_ID = "conn_redis"
 KAFKA_TOPIC = "weather-raw"
+PROXY_TOKEN = Variable.get("token__proxy")
 
 kafka_config={
     "bootstrap.servers": "kafka-broker-1:9094",
@@ -79,7 +81,7 @@ with DAG(
     def weather_crawling(url: str, district: str):
         from utils.crawling import WeatherCrawler
 
-        crawler = WeatherCrawler()
+        crawler = WeatherCrawler(proxy_token=PROXY_TOKEN)
         data = crawler.crawl(url)
         logging.info(data)
 

@@ -29,8 +29,8 @@ class WeatherCrawler(BaseCrawler):
             except Exception as e:
                 proxies = self.proxy_manager.rotate(by_asn=False) if self.proxy_manager is not None else {}
                 if proxies:
-                    self.logger.error(f"Failed crawling, retry with proxy")
-                    r = session.get(url, headers=self._headers)
+                    self.logger.error(f"Failed crawling, retry with proxy {proxies}")
+                    r = session.get(url, headers=self._headers, proxies=proxies)
                     r.raise_for_status()
                 else:
                     self.logger.error(f"Failed crawling, No proxy found ! unable to retry ! Error")
