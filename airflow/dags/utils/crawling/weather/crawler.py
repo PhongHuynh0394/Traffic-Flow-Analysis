@@ -5,12 +5,13 @@ import unicodedata
 import requests
 import os
 import re
+from typing import Optional
 
 class WeatherCrawler(BaseCrawler):
     _BASE_URL = "https://www.accuweather.com"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, proxy_token: Optional[str] = None):
+        super().__init__(proxy_token=proxy_token)
         self._url_cities = os.path.join(self._BASE_URL, "vi/browse-locations/asi/vn")
 
         self._headers = {
@@ -22,7 +23,18 @@ class WeatherCrawler(BaseCrawler):
         result = {}
         self._headers.update({"User-Agent": self.ua_rotator.rotate()})
         with requests.Session() as session:
-            r = session.get(url, headers=self._headers)
+            try:
+                r = session.get(url, headers=self._headers)
+                r.raise_for_status()
+            except Exception as e:
+                proxies = self.proxy_manager.rotate(by_asn=False) if self.proxy_manager is not None else {}
+                if proxies:
+                    self.logger.error(f"Failed crawling, retry with proxy {proxies}")
+                    r = session.get(url, headers=self._headers, proxies=proxies)
+                    r.raise_for_status()
+                else:
+                    self.logger.error(f"Failed crawling, No proxy found ! unable to retry ! Error")
+                    raise
 
         soup = BeautifulSoup(r.text, "html.parser")
         current_weather = soup.find("div", class_="current-weather-card card-module content-module")

@@ -23,7 +23,7 @@ with DAG(
     'sync_kafka_gcs__trafic_event',  
     description='Sync Kafka to GCS',
     default_args=default_args,
-    schedule_interval="* * * * *",  
+    schedule_interval="0,30 * * * *",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     tags=['stream', 'consumer', 'kafka', 'gcs']
@@ -35,8 +35,11 @@ with DAG(
         kafka_topic=KAFKA_TOPIC,
         kafka_config=kafka_config,
         gcs_credential_env=GCS_CREDENTIAL_ENV,
-        prefix="raw/raw_event",
-        poll_timeout=60,
-        max_messages=100
+        # prefix="raw/raw_event",
+        prefix="raw/raw_event/sample",
+        poll_timeout=30,
+        max_messages=1000,
+        partition_by="timestamp",
+        partition_level="hour"
     )
 

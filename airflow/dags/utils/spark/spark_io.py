@@ -8,6 +8,8 @@ import logging
 
 # GCS connector jars
 # "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar"
+# or
+# com.google.cloud.bigdataoss:gcs-connector:hadoop3-2.2.9 (Maven)
 
 # Kafka connector jars.packages
 # "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.4"
