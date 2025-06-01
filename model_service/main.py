@@ -1,12 +1,13 @@
 from fastapi import FastAPI, File
-import uvicorn
-import os
 from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
+import uvicorn
+
+import os
 import json
 from typing import Annotated
 from api import counting
 from api import healthcheck
-from fastapi.responses import RedirectResponse
 
 
 app = FastAPI()
