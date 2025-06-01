@@ -32,7 +32,8 @@ spark_conf = (SparkConf()
 
 @task
 def trans__raw__dim_cam_info():
-    gs_path = f"gs://{GCS_BUCKET}/{GCS_RAW_PATH}/raw_dim/tbl__raw__dim_cam_info.tsv"
+    # gs_path = f"gs://{GCS_BUCKET}/{GCS_RAW_PATH}/raw_dim/tbl__raw__dim_cam_info.tsv"
+    gs_path = f"gs://{GCS_BUCKET}/raw_dim/tbl__raw__dim_cam_info.tsv"
     with SparkIO(conf=spark_conf, gcs=True) as spark:
         try:
             logging.info(f"Read data from {gs_path}")
@@ -51,7 +52,7 @@ def trans__raw__dim_cam_info():
         
 
 
-        cleaned_gs_path = f"gs://{GCS_BUCKET}/{GCS_CLEANED_PATH}/dim_cam_info_cleaned"
+        cleaned_gs_path = f"gs://{GCS_BUCKET}/{GCS_CLEANED_PATH}/dim_cam_info_cleaned_v1"
         try:
             logging.info(f"Write data to {cleaned_gs_path}")
             dim_cam_info_cleaned.write \
@@ -62,7 +63,7 @@ def trans__raw__dim_cam_info():
             raise
 
 with DAG(
-    'trans_gcs_gcs__traffic_weather',
+    'trans_gcs_gcs__dim_cam_info',
     description='Transform data in batch layer',
     default_args=default_args,
     schedule_interval="@weekly",

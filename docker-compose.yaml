@@ -38,10 +38,12 @@ networks:
 volumes:
   postgres-airflow:
   traffic-redis-volume:
+  kafka_data1:
+  clickhouse:
+  clickhouse_logs: 
   minio-volume:
   minio-config:
-  kafka_data1:
-  druid_data:
+  # druid_data:
 
 services:
   model-api:
@@ -326,19 +328,38 @@ services:
     volumes:
       - traffic-redis-volume:/data
   
-  druid:
-    build:
-      context: ./druid
-    image: traffic-druid:latest
-    hostname: druid
+  clickhouse:
+    image: clickhouse:24.10.1.2812
+    container_name: clickhouse
+    hostname: clickhouse
     ports:
-      - "8888:8888"
-      - "8081:8081"
-    container_name: druid
+      - "8123:8123"
+      - "9000:9000"
     volumes:
-      - druid_data:/opt/druid/var
+      - clickhouse:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server/
+    environment:
+      - CLICKHOUSE_USER=user
+      - CLICKHOUSE_PASSWORD=user
+      - CLICKHOUSE_DATABASE=warehouse
+    env_file:
+      - .env
     networks:
-      - docker-net
+      - docker-net 
+
+  # druid:
+  #   build:
+  #     context: ./druid
+  #   image: traffic-druid:latest
+  #   hostname: druid
+  #   ports:
+  #     - "8888:8888"
+  #     - "8081:8081"
+  #   container_name: druid
+  #   volumes:
+  #     - druid_data:/opt/druid/var
+  #   networks:
+  #     - docker-net
 
 
   notebook:
@@ -370,6 +391,7 @@ services:
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       # - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-broker-1:9093,1@kafka-broker-2:9093
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-broker-1:9093
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true # auto create topic
       # Listener
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       - KAFKA_CFG_LISTENERS=INTERNAL://:9094,CONTROLLER://:9093,EXTERNAL://:9092

@@ -14,7 +14,8 @@ PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 REDIS_CONN_ID = "conn_redis"
 KAFKA_TOPIC = "weather-raw"
-PROXY_TOKEN = Variable.get("token__proxy")
+# PROXY_TOKEN = Variable.get("token__proxy")
+PROXY_TOKEN = None
 
 kafka_config={
     "bootstrap.servers": "kafka-broker-1:9094",
