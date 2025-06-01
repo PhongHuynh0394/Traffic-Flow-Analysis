@@ -151,7 +151,8 @@ with DAG(
         now = pendulum.now("Asia/Ho_Chi_Minh")
         date_str = now.to_date_string() # 'YYYY-MM-DD'
         time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
-        timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
+        # timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
+        timestamp_str = now.to_iso8601_string()  # e.g. '2025-06-01T20:29:07+07:00'
 
         prefix = f"raw/raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
 

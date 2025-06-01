@@ -89,7 +89,7 @@ services:
       POSTGRES_CRAWL_USER: airflow_crawl
     volumes:
       - postgres-airflow:/var/lib/postgresql/data
-      - ./database_init/psql_init.sql:/docker-entrypoint-initdb.d/psql_init.sql
+      - ./database_init/psql_init/psql_init.sql:/docker-entrypoint-initdb.d/psql_init.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
@@ -329,19 +329,20 @@ services:
       - traffic-redis-volume:/data
   
   clickhouse:
-    image: clickhouse:24.10.1.2812
+    image: clickhouse/clickhouse-server
     container_name: clickhouse
     hostname: clickhouse
     ports:
-      - "8123:8123"
-      - "9000:9000"
+      - "8123:8123"  # HTTP
+      - "9000:9000" # TCP (for clickhouse-client cli)
     volumes:
       - clickhouse:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server/
+      - ./database_init/clickhouse_init/clickhouse_init.sql:/docker-entrypoint-initdb.d/clickhouse_init.sql
     environment:
       - CLICKHOUSE_USER=user
       - CLICKHOUSE_PASSWORD=user
-      - CLICKHOUSE_DATABASE=warehouse
+      - CLICKHOUSE_DB=traffic_flow
     env_file:
       - .env
     networks:

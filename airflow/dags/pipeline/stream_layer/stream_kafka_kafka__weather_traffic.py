@@ -70,6 +70,7 @@ with DAG(
         conf = (SparkConf().setAppName("Raw-Weather-Traffic-Processing")
             .set("spark.executor.memory", "2g")
             .set("spark.jars.packages", ",".join(packages))
+            .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
             .setMaster("local[*]")
             )
 
@@ -148,13 +149,14 @@ with DAG(
     
             cols = ["cam_id", "district", "image_w", "image_h",
                         "object_name", "object_confidence",
-                        "object_bbox", "ts", "hour", 'dt', "minute"]
+                        "object_bbox", "hour", 'dt', "minute"]
     
             return trans_df.select(*cols)
 
 
         def transform_weather(df):
 
+            
             def extract_number(col):
                 return F.regexp_extract(col, r"(\d+)", 1).cast("int")
 
@@ -166,7 +168,8 @@ with DAG(
 
             trans_df = (
                 df
-                .withColumn("ts", F.col("timestamp").cast("timestamp"))
+                .withColumn("ts", F.col("timestamp").cast("string"))
+                # .withColumn("ts", F.date_format(F.col("timestamp").cast("timestamp"), "yyyy-MM-dd HH:mm:ss"))
                 .withColumn("cloud_ceiling_m", extract_number("cloud ceiling"))
                 .withColumn("cloud_cover_pct", extract_number("cloud cover"))
                 .withColumn("dew_point_c", extract_number("dew point"))
@@ -222,7 +225,7 @@ with DAG(
             #     how="left"
             # )
 
-            write_kafka_stream(weather_clean, "traffic-weather-cleaned", key=None)
+            write_kafka_stream(weather_clean, "weather-cleaned", key=None)
 
 
     process = process__traffic_weather()
