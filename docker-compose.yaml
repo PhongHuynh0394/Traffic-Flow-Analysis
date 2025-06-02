@@ -47,9 +47,10 @@ volumes:
 
 services:
   model-api:
-    build:
-      context: ./model_service
-    image: traffic-api:latest
+    # build:
+    #   context: ./model_service
+    # image: traffic-api:latest
+    image: phonghuynh/model-service:1.0.0
     hostname: object-counting-api
     container_name: object_counting_api
     ports:

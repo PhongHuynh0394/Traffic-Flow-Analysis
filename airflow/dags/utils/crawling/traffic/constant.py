@@ -438,3 +438,14 @@ CAMERA_DISTRICT_MAPPING = {'662b811d1afb9c00172dcc1d': 'Quận 1',
  '63b3c9bfbfd3d90017e9b039': 'Quận Thủ Đức',
  '63b549b8bfd3d90017ea782c': 'Quận 9',
  '63b54c93bfd3d90017ea7ab8': 'Quận Thủ Đức'}
+
+TOP_CAMERA = {'Quận 10': '63ae7a74bfd3d90017e8f2c7', 
+              'Quận 11': '5a824c905058170011f6eab0', 
+              'Quận 12': '595dd7693dcfc400106f28b0', 
+              'Quận 3': '63ae73cebfd3d90017e8f00d', 
+              'Quận 4': '63ae76ddbfd3d90017e8f11b', 
+              'Quận 6': '66b1c22f779f740018673f6e', 
+              'Bình Tân': '662a881a1afb9c00172d2559', 
+              'Thủ Đức': '5d8cd653766c88001718894c', 
+              'Tân Bình': '5deb576d1dc17d7c5515ad08', 
+              'Tân Phú': '6623f1046f998a001b2527db'}
