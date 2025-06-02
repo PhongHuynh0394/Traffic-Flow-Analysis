@@ -6,7 +6,7 @@ from services.predict_service import process_image
 router = APIRouter()
 
 # Load the YOLOv8 model
-MODEL_PATH = "./yolov8x.pt"
+MODEL_PATH = "./yolov8m.pt"
 model = YOLO(MODEL_PATH)
 
 # Define the allowed class IDs to include in results
@@ -35,4 +35,4 @@ async def detect_objects(file: UploadFile = File(...)):
     return response
 
 if __name__ == "__main__":
-    pass
+    pass   

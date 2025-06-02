@@ -155,12 +155,12 @@ with DAG(
 
         prefix = f"raw/raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
 
-        try:
-            # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
-            gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
-        except Exception as e:
-            logging.error(f"Failed to upload image to GCS: {e}")
-            raise
+        # try:
+        #     # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
+        #     gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
+        # except Exception as e:
+        #     logging.error(f"Failed to upload image to GCS: {e}")
+        #     raise
 
         # Predict with api
         files = {'file': ('file.png', img_data, 'image/png')}

@@ -48,6 +48,7 @@ class UserAgentRotator:
     
     def rotate(self, static_common=[30, 70]):
         use_static_pool = random.choices([True, False], weights=static_common, k=1)[0]
+        use_static_pool = True
         if use_static_pool:
             return random.choice(self._STATIC_UA_POOL)
         else:
