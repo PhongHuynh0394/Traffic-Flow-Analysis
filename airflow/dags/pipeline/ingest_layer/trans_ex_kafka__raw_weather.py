@@ -9,18 +9,33 @@ from airflow.models import Variable
 from datetime import datetime
 import pendulum
 import logging
+import os
+from utils.crawling.weather.constant import MAP_URL
 
 PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 REDIS_CONN_ID = "conn_redis"
-KAFKA_TOPIC = "weather-raw"
+REDPANDA_TOPIC = "weather-raw"
+REDPANDA_SERVER = Variable.get("rpanda__server")
+REDPANDA_USER = Variable.get("rpanda__user")
+REDPANDA_PASS = Variable.get("rpanda__password")
+
 # PROXY_TOKEN = Variable.get("token__proxy")
+
 PROXY_TOKEN = None
 
-kafka_config={
-    "bootstrap.servers": "kafka-broker-1:9094",
-    "replication_factor": 1,
-    "num_partitions": 1,
+# kafka_config={
+#     "bootstrap.servers": "kafka-broker-1:9094",
+#     "replication_factor": 1,
+#     "num_partitions": 1,
+# }
+
+conf = {
+    "bootstrap.servers": REDPANDA_SERVER,
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanism': 'SCRAM-SHA-256',
+    'sasl.username': REDPANDA_USER,
+    'sasl.password': REDPANDA_PASS,
 }
 
 default_args = {
@@ -95,9 +110,9 @@ with DAG(
         })
 
         # send to kafka
-        kafka_hook = KafkaProducerHook(config=kafka_config)
+        kafka_hook = KafkaProducerHook(config=conf)
         kafka_hook.produce(
-            topic=KAFKA_TOPIC,
+            topic=REDPANDA_TOPIC,
             value=data,
             isflush=True
         )
@@ -107,15 +122,20 @@ with DAG(
     end_task = DummyOperator(
         task_id='end'
     )
+    task_input = [{"district": d, "url": u} for d, u in MAP_URL.items()]
+
+    weather_crawling_task = weather_crawling.expand_kwargs(task_input)
+
+    start_task >> weather_crawling_task >> end_task
 
 
-    for district in dag.params["district"]:
-        district_name = district.replace('Quận ', 'district_')
-        weather_url = get_weather_url.override(
-            task_id=f"get_url__{district_name}")(district=district, city="{{params.city}}")
+    # for district in dag.params["district"]:
+    #     district_name = district.replace('Quận ', 'district_')
+    #     weather_url = get_weather_url.override(
+    #         task_id=f"get_url__{district_name}")(district=district, city="{{params.city}}")
 
-        weather_crawling_task = weather_crawling.override(
-            task_id=f"crawling__{district_name}")(url=weather_url, district=district)
+    #     weather_crawling_task = weather_crawling.override(
+    #         task_id=f"crawling__{district_name}")(url=weather_url, district=district)
             
 
-        start_task >> weather_url >> weather_crawling_task >> end_task
+    #     start_task >> weather_url >> weather_crawling_task >> end_task

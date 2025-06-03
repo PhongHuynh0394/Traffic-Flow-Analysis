@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.models import Variable
 from airflow.models.param import Param
 from airflow.decorators import task
 from hooks.minio_hook import MinioHook
@@ -13,6 +14,7 @@ import logging
 import requests
 import pendulum
 import requests
+from utils.crawling.traffic.constant import MAPPING_FIX_CAM
 
 # MINIO_CONN = 'conn_minio__datalake'
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"
@@ -21,8 +23,12 @@ GCS_BUCKET = "traffic_flow_thesis"
 PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
-MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
-# MODEL_API = "http://object-counting-api:8000/upload-image"
+
+REDPANDA_SERVER = Variable.get("rpanda__server")
+REDPANDA_USER = Variable.get("rpanda__user")
+REDPANDA_PASS = Variable.get("rpanda__password")
+# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+MODEL_API = Variable.get("model__api")
 
 params = {
     "district": Param(
@@ -43,55 +49,20 @@ default_args = {
     "retries": 0
 }
 
-kafka_config={
-    "bootstrap.servers": "kafka-broker-1:9094",
-    "replication_factor": 1,
-    "num_partitions": 1,
+# kafka_config={
+#     "bootstrap.servers": "kafka-broker-1:9094",
+#     "replication_factor": 1,
+#     "num_partitions": 1,
+# }
+
+conf = {
+    "bootstrap.servers": REDPANDA_SERVER,
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanism': 'SCRAM-SHA-256',
+    'sasl.username': REDPANDA_USER,
+    'sasl.password': REDPANDA_PASS,
 }
 
-MAPPING_FIX_CAM = {'Huyện Bình Chánh': ['5ad06a0d98d8fc001102e27b',
-  '662a87df1afb9c00172d2522',
-  '6792f03d8c5ed4001b27f378'],
- 'Quận 1': ['65e054fb6b18080018db6632',
-  '662b85bf1afb9c00172dd149',
-  '662b811d1afb9c00172dcc1d',
-  '662b7d0c1afb9c00172dc6a6',
-  '662b82da1afb9c00172dce94'],
- 'Quận 10': ['63ae7a74bfd3d90017e8f2c7', '6623e7076f998a001b2523ea'],
- 'Quận 12': ['595dd7693dcfc400106f28b0'],
- 'Quận 3': ['5deb576d1dc17d7c5515ad0e',
-  '5deb576d1dc17d7c5515ad11',
-  '662b80e81afb9c00172dcbec',
-  '63ae73cebfd3d90017e8f00d',
-  '5deb576d1dc17d7c5515acf8'],
- 'Quận 4': ['63ae76ddbfd3d90017e8f11b'],
- 'Quận 5': ['66f1266f538c780017c93579',
-  '66b1c190779f740018673ed4',
-  '63b3c274bfd3d90017e9ab93',
-  '662b4efc1afb9c00172d86bc'],
- 'Quận 7': ['662a8ef41afb9c00172d2af2', '662a8c931afb9c00172d2901'],
- 'Quận 9': ['63b54996bfd3d90017ea781a',
-  '63b54938bfd3d90017ea77f6',
-  '59d3414302eb490011a0a610'],
- 'Quận Bình Thạnh': ['6623e7b76f998a001b25242d',
-  '63b66051bfd3d90017eaa4a3',
-  '5a8255a55058170011f6eac7',
-  '5d9dddb9766c880017188c96'],
- 'Quận Bình Tân': ['662a881a1afb9c00172d2559', '662b51201afb9c00172d889a'],
- 'Quận Gò Vấp': ['5a6066608576340017d06617', '6623ed9b6f998a001b2526cd'],
- 'Quận Thủ Đức': ['5d8cd7bb766c880017188952', '5d8cd653766c88001718894c'],
- 'Quận Tân Bình': ['5deb576d1dc17d7c5515ad08',
-  '66b1c4e7779f7400186741e4',
-  '5deb576d1dc17d7c5515ad09'],
- 'Quận Tân Phú': ['6623f1046f998a001b2527db'],
- 'Quận Phú Nhuận': ['6623e8da6f998a001b2524a6'],
- 'Huyện Hóc Môn': ['6623ef2b6f998a001b252753', '6623efc26f998a001b25277f'],
- 'Quận 2': ['649da495a6068200171a6cb6', '63b5503bbfd3d90017ea7ccc'],
- 'Quận 6': ['5d8cd326766c88001718893e',
-  '662b4f7e1afb9c00172d872e',
-  '66b1c22f779f740018673f6e'],
- 'Quận 11': ['5a824c905058170011f6eab0'],
- 'Huyện Nhà Bè': ['5d9de3c2766c880017188cb3']}
 
 # Initialize the DAG
 with DAG(
@@ -136,6 +107,7 @@ with DAG(
     @task(provide_context=True)
     def image_crawling(id: str, district: str):
         from utils.crawling import TrafficCrawler
+        from utils.crawling.traffic.constant import MAPPING_FIX_CAM
 
         # Crawl raw image
         crawler = TrafficCrawler()
@@ -173,7 +145,7 @@ with DAG(
             "district": district
         })
             
-        kafka_hook = KafkaProducerHook(config=kafka_config)
+        kafka_hook = KafkaProducerHook(config=conf)
         kafka_hook.produce(
             topic=KAFKA_TOPIC,
             value=message,
