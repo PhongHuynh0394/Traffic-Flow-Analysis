@@ -124,12 +124,13 @@ def trans__staging__traffic(**context):
                 )
 
             trans_df = trans_df \
-                        .withColumn("hour_of_day", F.hour(F.col("ts"))) \
-                        .withColumn("dt", F.to_date("ts"))
+                        .withColumn("hour", F.hour(F.col("ts"))) \
+                        .withColumn("dt", F.to_date("ts")) \
+                        .withColumn("minute", F.minute(F.col("ts")))
 
             cols = ["cam_id", "district", "image_w", "image_h",
                         "object_name", "object_confidence",
-                        "object_bbox", "ts", "hour_of_day", 'dt']
+                        "object_bbox", "ts", "hour", 'dt', 'minute']
 
             return trans_df.select(*cols)
         
@@ -207,7 +208,8 @@ def trans__staging__weather(**context):
             .withColumn("wind_gust_kmph", extract_number("wind gusts"))
             .withColumn("status", F.lower(F.col("status")))
             .withColumn("dt", F.to_date("ts"))
-            .withColumn("hour_of_day", F.hour("ts"))
+            .withColumn("hour", F.hour("ts"))
+            .withColumn("minute", F.minute("ts"))
         )
 
         # Select relevant fields
@@ -215,7 +217,7 @@ def trans__staging__weather(**context):
             "ts", "district", "cloud_ceiling_m", "cloud_cover_pct", "dew_point_c",
             "humidity_pct", "uv_index", "uv_index_status", "pressure_mb", "realfeel_c",
             "realfeel_shade_c", "temp_c", "visibility_km", "status",
-            "wind_kmph", "wind_direction", "wind_gust_kmph", "dt", "hour_of_day"
+            "wind_kmph", "wind_direction", "wind_gust_kmph", "dt", "hour", "minute"
         ]
 
         return trans_df.select(*cols)
