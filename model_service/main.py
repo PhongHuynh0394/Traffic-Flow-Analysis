@@ -16,6 +16,7 @@ app = FastAPI()
 app.include_router(counting.router, prefix="/model", tags=['model'])
 app.include_router(healthcheck.router)
 
+
 @app.get("/")
 async def root():
     return RedirectResponse(url="/docs")
@@ -27,4 +28,3 @@ if __name__ == "__main__":
                 host=host,
                 port=8000,
                 reload=True)
-    

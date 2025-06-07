@@ -110,4 +110,3 @@ class WeatherCrawler(BaseCrawler):
 if __name__ == "__main__":
     crawler = WeatherCrawler()
     print(crawler.get_city_list())
-    

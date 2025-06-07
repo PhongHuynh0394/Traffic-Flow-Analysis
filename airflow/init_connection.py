@@ -63,6 +63,5 @@ def create_connection(session=None):
             logging.info(f"Connection {conn_cf['conn_id']} created successfully")
 
 
-
 if __name__ == "__main__":
     create_connection()

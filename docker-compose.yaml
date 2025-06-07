@@ -418,6 +418,7 @@ services:
       timeout: 10s
       retries: 10
 
+
   kafka-ui:
       image: provectuslabs/kafka-ui
       container_name: kafka-ui

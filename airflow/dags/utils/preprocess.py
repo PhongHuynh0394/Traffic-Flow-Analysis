@@ -10,6 +10,6 @@ def standard_location(district: str):
     return d_name
 
 if __name__ == "__main__":
-    districts = ["Huyện Bình Chánh", "Quận 11", "quan 10", "huyen bình Chánh", "Thủ đức", "thu dau mot"]
+    districts = ["Huyện Bình Chánh", "Quận 11", "quan 10", "huyen bình Chánh", "Thủ đức", "thu dau mot", 'huyen nha Be']
     for d in districts:
         print(standard_location(d))
