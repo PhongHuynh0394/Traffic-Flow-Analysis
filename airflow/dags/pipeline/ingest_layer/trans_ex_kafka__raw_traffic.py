@@ -14,7 +14,7 @@ import logging
 import requests
 import pendulum
 import requests
-from utils.crawling.traffic.constant import MAPPING_FIX_CAM
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # MINIO_CONN = 'conn_minio__datalake'
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"
@@ -105,71 +105,86 @@ with DAG(
 
 
     @task(provide_context=True)
-    def image_crawling(id: str, district: str):
+    def image_crawling():
         from utils.crawling import TrafficCrawler
-        from utils.crawling.traffic.constant import MAPPING_FIX_CAM
+        from utils.crawling.traffic.constant import TOP_CAMERA
 
-        # Crawl raw image
-        crawler = TrafficCrawler()
-        img_data = crawler.crawl(id)
+        def crawling_traffic_frame(id, district):
+            # Crawl raw image
+            crawler = TrafficCrawler()
+            img_data = crawler.crawl(id)
 
-        # Save raw img to S3
-        # s3_hook = MinioHook(conn_id=MINIO_CONN)
-        gcs_hook = GCSHook(
-            gcs_credential_env=GCS_CREDENTIAL_ENV,
-            bucket=GCS_BUCKET
+            # Save raw img to S3
+            # s3_hook = MinioHook(conn_id=MINIO_CONN)
+            # gcs_hook = GCSHook(
+            #     gcs_credential_env=GCS_CREDENTIAL_ENV,
+            #     bucket=GCS_BUCKET
+            # )
+
+            now = pendulum.now("Asia/Ho_Chi_Minh")
+            date_str = now.to_date_string() # 'YYYY-MM-DD'
+            time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
+            # timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
+            timestamp_str = now.to_iso8601_string()  # e.g. '2025-06-01T20:29:07+07:00'
+
+            prefix = f"raw/raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
+
+            # try:
+            #     # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
+            #     gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
+            # except Exception as e:
+            #     logging.error(f"Failed to upload image to GCS: {e}")
+            #     raise
+
+            # Predict with api
+            files = {'file': ('file.png', img_data, 'image/png')}
+            message = requests.post(MODEL_API, files=files).json()
+            message.update({
+                "timestamp": timestamp_str,
+                "cam_id": id,
+                "img": f"{GCS_BUCKET}/{prefix}",
+                "district": district
+            })
+                
+            kafka_hook = KafkaProducerHook(config=conf)
+            kafka_hook.produce(
+                topic=KAFKA_TOPIC,
+                value=message,
+                isflush=True
+            )
+
+            return message
+        
+        with ThreadPoolExecutor(max_workers=len(TOP_CAMERA)) as executor:
+            futures = {executor.submit(crawling_traffic_frame, id, district): id for id, district in TOP_CAMERA.items()}
+
+            for future in as_completed(futures):
+                try:
+                    logging.info(f"Success full process for cam {futures[future]}")
+                except Exception as e:
+                    logging.error(f"Error at {futures[future]}, error: {e}")
+        
+
+
+        end_task = DummyOperator(
+            task_id='end'
         )
-
-        now = pendulum.now("Asia/Ho_Chi_Minh")
-        date_str = now.to_date_string() # 'YYYY-MM-DD'
-        time_str = now.format("HH-mm-ss") # 'HH-MM-SS'
-        # timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
-        timestamp_str = now.to_iso8601_string()  # e.g. '2025-06-01T20:29:07+07:00'
-
-        prefix = f"raw/raw_images/traffic/{id}/{date_str}/{time_str}.jpg"
-
-        # try:
-        #     # s3_hook.upload_img(bucket_name=BUCKET, prefix=prefix, image_data=img_data)
-        #     gcs_hook.upload_bytes(data=img_data, destination_blob_name=prefix)
-        # except Exception as e:
-        #     logging.error(f"Failed to upload image to GCS: {e}")
-        #     raise
-
-        # Predict with api
-        files = {'file': ('file.png', img_data, 'image/png')}
-        message = requests.post(MODEL_API, files=files).json()
-        message.update({
-            "timestamp": timestamp_str,
-            "cam_id": id,
-            "img": f"{GCS_BUCKET}/{prefix}",
-            "district": district
-        })
-            
-        kafka_hook = KafkaProducerHook(config=conf)
-        kafka_hook.produce(
-            topic=KAFKA_TOPIC,
-            value=message,
-            isflush=True
-        )
-
-
-    end_task = DummyOperator(
-        task_id='end'
-    )
 
     # for district in dag.params["district"]:
-    for district in MAPPING_FIX_CAM:
-        # district_name = district.replace("Quận ", "district_")
-        district_name = district.replace(" ", "_").replace("Quận", "district").replace("Huyện", "district")
+    # for district in MAPPING_FIX_CAM:
+    #     # district_name = district.replace("Quận ", "district_")
+    #     district_name = district.replace(" ", "_").replace("Quận", "district").replace("Huyện", "district")
 
         # cam_id = query_cam_id.override(
         #     task_id=f"query_cam__{district_name}"
         # )(district=district, limit=dag.params["limit"])
 
-        cam_id = MAPPING_FIX_CAM[district]
+        # cam_id = MAPPING_FIX_CAM[district]
 
-        image_crawling_task = image_crawling.override(task_id=f"crawling__{district_name}") \
-                                            .partial(district=district) \
-                                            .expand(id=cam_id)
+        # image_crawling_task = image_crawling.override(task_id=f"crawling__{district_name}") \
+        #                                     .partial(district=district) \
+        #                                     .expand(id=cam_id)
+
+        image_crawling_task = image_crawling()
 
         start_task >> image_crawling_task >> end_task
