@@ -16,6 +16,7 @@ import pendulum
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+
 # MINIO_CONN = 'conn_minio__datalake'
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"
 REDIS_CONN_ID = "conn_redis"
@@ -27,8 +28,8 @@ KAFKA_TOPIC = "traffic-object-raw"
 REDPANDA_SERVER = Variable.get("rpanda__server")
 REDPANDA_USER = Variable.get("rpanda__user")
 REDPANDA_PASS = Variable.get("rpanda__password")
-# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
-MODEL_API = Variable.get("model__api")
+MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+# MODEL_API = Variable.get("model__api")
 
 params = {
     "district": Param(
@@ -107,10 +108,11 @@ with DAG(
     @task(provide_context=True)
     def image_crawling():
         from utils.crawling import TrafficCrawler
-        from utils.crawling.traffic.constant import TOP_CAMERA
+        from utils.crawling.traffic.constant import MAPPING_FIX_CAM
 
         def crawling_traffic_frame(id, district):
             # Crawl raw image
+            logging.info(f"Process district: {district} for cam {id}")
             crawler = TrafficCrawler()
             img_data = crawler.crawl(id)
 
@@ -155,20 +157,19 @@ with DAG(
 
             return message
         
-        with ThreadPoolExecutor(max_workers=len(TOP_CAMERA)) as executor:
-            futures = {executor.submit(crawling_traffic_frame, id, district): id for id, district in TOP_CAMERA.items()}
+        with ThreadPoolExecutor(max_workers=len(MAPPING_FIX_CAM)) as executor:
+            futures = {executor.submit(crawling_traffic_frame, id, district): id for district, id in MAPPING_FIX_CAM.items()}
 
             for future in as_completed(futures):
                 try:
                     logging.info(f"Success full process for cam {futures[future]}")
                 except Exception as e:
                     logging.error(f"Error at {futures[future]}, error: {e}")
-        
 
 
-        end_task = DummyOperator(
-            task_id='end'
-        )
+    end_task = DummyOperator(
+        task_id='end'
+    )
 
     # for district in dag.params["district"]:
     # for district in MAPPING_FIX_CAM:
@@ -185,6 +186,6 @@ with DAG(
         #                                     .partial(district=district) \
         #                                     .expand(id=cam_id)
 
-        image_crawling_task = image_crawling()
+    image_crawling_task = image_crawling()
 
-        start_task >> image_crawling_task >> end_task
+    start_task >> image_crawling_task >> end_task

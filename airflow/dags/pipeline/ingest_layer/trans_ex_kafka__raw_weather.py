@@ -121,7 +121,7 @@ with DAG(
             return data
         
         with ThreadPoolExecutor(max_workers=len(MAP_URL)) as executor:
-            future = {executor.submit(crawling_weather, url, district): url for url, district in MAP_URL.items()}
+            future = {executor.submit(crawling_weather, url, district): url for district, url in MAP_URL.items()}
 
             for future in as_completed(future):
                 try:
