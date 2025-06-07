@@ -9,6 +9,8 @@ from pyspark.sql.functions import col, regexp_replace, trim, regexp_extract, to_
 from pyspark.sql.types import DoubleType, StructField, ArrayType
 from pyspark.sql import functions as F, types as T
 
+from utils.spark.spark_io import SparkIO
+
 KAFKA_SERVER = "kafka-broker-1:9094"
 KAFKA_SOURCE_WEATHER = "weather-raw"
 KAFKA_SOURCE_TRAFFIC = "traffic-object-raw"
@@ -19,6 +21,18 @@ default_args = {
     "depends_on_past": False,
     "retries": 0
 }
+
+# Spark kafka connector
+packages = [
+    "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.4"
+]
+
+conf = (SparkConf().setAppName("Raw-Weather-Traffic-Processing")
+    .set("spark.executor.memory", "2g")
+    .set("spark.jars.packages", ",".join(packages))
+    .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
+    .setMaster("local[*]")
+    )
 
 
 def read_kafka_stream(spark, topic, schema):
@@ -57,42 +71,9 @@ with DAG(
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False
 ) as dag:
-    
+
     @task
-    def process__traffic_weather():
-        from utils.spark.spark_io import SparkIO
-
-        # Spark kafka connector
-        packages = [
-            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.4"
-        ]
-
-        conf = (SparkConf().setAppName("Raw-Weather-Traffic-Processing")
-            .set("spark.executor.memory", "2g")
-            .set("spark.jars.packages", ",".join(packages))
-            .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
-            .setMaster("local[*]")
-            )
-
-        object_schema = StructType([
-            StructField("class_id", IntegerType()),
-            StructField("class_object", StringType()),
-            StructField("classname", StringType()),
-            StructField("confidence", DoubleType()),
-            StructField("coordinates", ArrayType(DoubleType()))
-        ])
-
-        traffic_schema = StructType([
-            StructField("cam_id", StringType()),
-            StructField("img", StringType()),
-            StructField("district", StringType()),
-            StructField("timestamp", StringType()),
-            StructField("image_shape", ArrayType(IntegerType())),
-            StructField("total", IntegerType()),
-            StructField("objects", ArrayType(object_schema)),
-        ])
-
-
+    def process__weather_event():
         weather_schema = StructType([
             StructField("cloud ceiling", StringType(), True),
             StructField("cloud cover", StringType(), True),
@@ -115,47 +96,7 @@ with DAG(
             StructField("district", StringType())
         ])
 
-        def transform_traffic(df):
-            
-            # Cast type
-            trans_df = (df
-                    .withColumn("cam_id", F.trim(F.col("cam_id")).alias("cam_id"))
-                    .withColumn("ts", F.col("timestamp").cast("timestamp"))
-                    .withColumn("image_h", F.element_at("image_shape", 1).cast("int"))
-                    .withColumn("image_w", F.element_at("image_shape", 2).cast("int"))
-            )
-            
-            # Explode dict object
-            trans_df = trans_df.withColumn("obj", F.explode_outer("objects"))
-            trans_df = (trans_df
-                    .withColumn("object_id", F.col("obj.class_id").cast("int"))
-                    .withColumn("object_name", F.col("obj.class_object").cast("string"))
-                    .withColumn("object_confidence",
-                                F.when(F.col("obj.confidence").between(0.0, 1.0),
-                                    F.col("obj.confidence")))
-                    .withColumn("object_bbox",
-                                F.when(F.size("obj.coordinates") == 4,
-                                    F.col("obj.coordinates").cast("array<double>")))
-            )
-    
-            trans_df = trans_df.filter(
-                    (F.col("ts").isNotNull())
-                )
-    
-            trans_df = trans_df \
-                        .withColumn("hour", F.hour(F.col("ts"))) \
-                        .withColumn("dt", F.to_date("ts")) \
-                        .withColumn("minute", F.minute("ts"))
-    
-            cols = ["cam_id", "district", "image_w", "image_h",
-                        "object_name", "object_confidence",
-                        "object_bbox", "hour", 'dt', "minute"]
-    
-            return trans_df.select(*cols)
-
-
         def transform_weather(df):
-
             
             def extract_number(col):
                 return F.regexp_extract(col, r"(\d+)", 1).cast("int")
@@ -200,14 +141,78 @@ with DAG(
 
             return trans_df.select(*cols)
 
-
         with SparkIO(conf=conf) as spark:
 
             weather_raw = read_kafka_stream(spark, KAFKA_SOURCE_WEATHER, weather_schema)
-            # traffic_raw = read_kafka_stream(spark, KAFKA_SOURCE_TRAFFIC, traffic_schema)
-
-            # traffic_clean = transform_traffic(traffic_raw)
             weather_clean = transform_weather(weather_raw)
+    
+            write_kafka_stream(weather_clean, "weather-cleaned", key=None)
+
+
+    @task
+    def process__traffic_event():
+
+
+        object_schema = StructType([
+            StructField("class_id", IntegerType()),
+            StructField("class_object", StringType()),
+            StructField("classname", StringType()),
+            StructField("confidence", DoubleType()),
+            StructField("coordinates", ArrayType(DoubleType()))
+        ])
+
+        traffic_schema = StructType([
+            StructField("cam_id", StringType()),
+            StructField("img", StringType()),
+            StructField("district", StringType()),
+            StructField("timestamp", StringType()),
+            StructField("image_shape", ArrayType(IntegerType())),
+            StructField("total", IntegerType()),
+            StructField("objects", ArrayType(object_schema)),
+        ])
+
+        def transform_traffic(df):
+            
+            # Cast type
+            trans_df = (df
+                    .withColumn("cam_id", F.trim(F.col("cam_id")).alias("cam_id"))
+                    .withColumn("ts", F.col("timestamp").cast("timestamp"))
+                    .withColumn("image_h", F.element_at("image_shape", 1).cast("int"))
+                    .withColumn("image_w", F.element_at("image_shape", 2).cast("int"))
+            )
+            
+            # Explode dict object
+            trans_df = trans_df.withColumn("obj", F.explode_outer("objects"))
+            trans_df = (trans_df
+                    .withColumn("object_id", F.col("obj.class_id").cast("int"))
+                    .withColumn("object_name", F.col("obj.class_object").cast("string"))
+                    .withColumn("object_confidence",
+                                F.when(F.col("obj.confidence").between(0.0, 1.0),
+                                    F.col("obj.confidence")))
+                    .withColumn("object_bbox",
+                                F.when(F.size("obj.coordinates") == 4,
+                                    F.col("obj.coordinates").cast("array<double>")))
+            )
+    
+            trans_df = trans_df.filter(
+                    (F.col("ts").isNotNull())
+                )
+    
+            trans_df = trans_df \
+                        .withColumn("hour", F.hour(F.col("ts"))) \
+                        .withColumn("dt", F.to_date("ts")) \
+                        .withColumn("minute", F.minute("ts"))
+    
+            cols = ["cam_id", "ts", "district", "image_w", "image_h",
+                        "object_name", "object_confidence",
+                        "object_bbox", "hour", 'dt', "minute"]
+    
+            return trans_df.select(*cols)
+
+
+        with SparkIO(conf=conf) as spark:
+            traffic_raw = read_kafka_stream(spark, KAFKA_SOURCE_TRAFFIC, traffic_schema)
+            traffic_clean = transform_traffic(traffic_raw)
     
             # Apply watermarks
             # traffic_clean = traffic_clean.withWatermark("ts", "2 minutes")
@@ -225,7 +230,8 @@ with DAG(
             #     how="left"
             # )
 
-            write_kafka_stream(weather_clean, "weather-cleaned", key=None)
+            write_kafka_stream(traffic_clean, "traffic-cleaned", key=None)
 
 
-    process = process__traffic_weather()
+    process_traffic = process__traffic_event()
+    process_weather = process__weather_event()

@@ -16,6 +16,8 @@ import pendulum
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# from utils.crawling.traffic.constant import TOP_CAMERA
+# from utils.preprocess import standard_location
 
 # MINIO_CONN = 'conn_minio__datalake'
 GCS_CREDENTIAL_ENV = "GOOGLE_APPLICATION_CREDENTIALS"
@@ -25,11 +27,11 @@ PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
 
-REDPANDA_SERVER = Variable.get("rpanda__server")
-REDPANDA_USER = Variable.get("rpanda__user")
-REDPANDA_PASS = Variable.get("rpanda__password")
-# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
-MODEL_API = Variable.get("model__api")
+# REDPANDA_SERVER = Variable.get("rpanda__server")
+# REDPANDA_USER = Variable.get("rpanda__user")
+# REDPANDA_PASS = Variable.get("rpanda__password")
+MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+# MODEL_API = Variable.get("model__api")
 
 params = {
     "district": Param(
@@ -50,19 +52,19 @@ default_args = {
     "retries": 0
 }
 
-# kafka_config={
-#     "bootstrap.servers": "kafka-broker-1:9094",
-#     "replication_factor": 1,
-#     "num_partitions": 1,
-# }
-
-conf = {
-    "bootstrap.servers": REDPANDA_SERVER,
-    'security.protocol': 'SASL_SSL',
-    'sasl.mechanism': 'SCRAM-SHA-256',
-    'sasl.username': REDPANDA_USER,
-    'sasl.password': REDPANDA_PASS,
+conf ={
+    "bootstrap.servers": "kafka-broker-1:9094",
+    "replication_factor": 1,
+    "num_partitions": 1,
 }
+
+# conf = {
+#     "bootstrap.servers": REDPANDA_SERVER,
+#     'security.protocol': 'SASL_SSL',
+#     'sasl.mechanism': 'SCRAM-SHA-256',
+#     'sasl.username': REDPANDA_USER,
+#     'sasl.password': REDPANDA_PASS,
+# }
 
 
 # Initialize the DAG
@@ -109,7 +111,7 @@ with DAG(
     @task(provide_context=True)
     def image_crawling():
         from utils.crawling import TrafficCrawler
-        from utils.crawling.traffic.constant import MAPPING_FIX_CAM
+        from utils.crawling.traffic.constant import TOP_CAMERA
 
         def crawling_traffic_frame(id, district):
             # Crawl raw image

@@ -2,7 +2,7 @@ import unicodedata
 
 def standard_location(district: str):
     """Lowercase and remove tone mark"""
-    d_name = district.lower().replace(" ", "-").replace("quận", "district")
+    d_name = district.lower().replace(" ", "_").replace("quận", "district")
     d_name = unicodedata.normalize('NFD', d_name)
     d_name = ''.join(c for c in d_name if unicodedata.category(c) != 'Mn')
     d_name = d_name.replace('đ', 'd').replace('Đ', 'D')

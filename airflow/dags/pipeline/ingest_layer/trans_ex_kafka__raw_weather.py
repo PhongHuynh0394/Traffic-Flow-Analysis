@@ -17,27 +17,27 @@ PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 REDIS_CONN_ID = "conn_redis"
 REDPANDA_TOPIC = "weather-raw"
-REDPANDA_SERVER = Variable.get("rpanda__server")
-REDPANDA_USER = Variable.get("rpanda__user")
-REDPANDA_PASS = Variable.get("rpanda__password")
+# REDPANDA_SERVER = Variable.get("rpanda__server")
+# REDPANDA_USER = Variable.get("rpanda__user")
+# REDPANDA_PASS = Variable.get("rpanda__password")
 
 # PROXY_TOKEN = Variable.get("token__proxy")
 
 PROXY_TOKEN = None
 
-# kafka_config={
-#     "bootstrap.servers": "kafka-broker-1:9094",
-#     "replication_factor": 1,
-#     "num_partitions": 1,
-# }
-
-conf = {
-    "bootstrap.servers": REDPANDA_SERVER,
-    'security.protocol': 'SASL_SSL',
-    'sasl.mechanism': 'SCRAM-SHA-256',
-    'sasl.username': REDPANDA_USER,
-    'sasl.password': REDPANDA_PASS,
+conf ={
+    "bootstrap.servers": "kafka-broker-1:9094",
+    "replication_factor": 1,
+    "num_partitions": 1,
 }
+
+# conf = {
+#     "bootstrap.servers": REDPANDA_SERVER,
+#     'security.protocol': 'SASL_SSL',
+#     'sasl.mechanism': 'SCRAM-SHA-256',
+#     'sasl.username': REDPANDA_USER,
+#     'sasl.password': REDPANDA_PASS,
+# }
 
 default_args = {
     "owner": "PhongHuynh0394",

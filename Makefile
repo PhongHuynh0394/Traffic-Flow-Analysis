@@ -4,9 +4,13 @@ service ?= none
 
 # Group servies
 airflow = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
-kafka = kafka-broker-1
 api = model-api
+<<<<<<< HEAD
 ALL_SERVICES = $(airflow) $(kafka) clickhouse
+=======
+streaming = kafka-broker-1 $(airflow) clickhouse model-api
+ALL_SERVICES = $(airflow) $(kafka) redis clickhouse
+>>>>>>> 2ab99f1 (add streaming processing)
 COMPOSE_FILE = docker-compose.yaml
 
 .PHONY: build up down downall downing restart notebook
@@ -18,9 +22,9 @@ up:
 ifeq ($(service), airflow)
 	@echo "Starting Airflow services..."
 	docker-compose -f $(COMPOSE_FILE) up -d $(airflow)
-else ifeq ($(service), kafka)
+else ifeq ($(service), streaming)
 	@echo "Starting $(service) services..."
-	docker-compose -f $(COMPOSE_FILE) up -d $(kafka)
+	docker-compose -f $(COMPOSE_FILE) up -d $(streaming)
 else ifeq ($(service), none)
 	@echo "Starting all services..."
 	docker-compose -f $(COMPOSE_FILE) up -d $(ALL_SERVICES)
