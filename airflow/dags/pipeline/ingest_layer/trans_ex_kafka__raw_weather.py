@@ -11,6 +11,7 @@ import pendulum
 import logging
 import os
 from utils.crawling.weather.constant import MAP_URL
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 PSQL_TABLE = "tbl__raw__dim_weather_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
@@ -97,34 +98,43 @@ with DAG(
     def weather_crawling(url: str, district: str):
         from utils.crawling import WeatherCrawler
 
-        crawler = WeatherCrawler(proxy_token=PROXY_TOKEN)
-        data = crawler.crawl(url)
-        logging.info(data)
+        def crawling_weather(url, district):
+            crawler = WeatherCrawler(proxy_token=PROXY_TOKEN)
+            data = crawler.crawl(url)
+            logging.info(data)
 
-        now = pendulum.now("Asia/Ho_Chi_Minh")
-        # timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
-        timestamp_str = now.to_iso8601_string()  # e.g. '2025-06-01T20:29:07+07:00'
-        data.update({
-            "timestamp": timestamp_str,
-            "district": district
-        })
+            now = pendulum.now("Asia/Ho_Chi_Minh")
+            # timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
+            timestamp_str = now.to_iso8601_string()  # e.g. '2025-06-01T20:29:07+07:00'
+            data.update({
+                "timestamp": timestamp_str,
+                "district": district
+            })
 
-        # send to kafka
-        kafka_hook = KafkaProducerHook(config=conf)
-        kafka_hook.produce(
-            topic=REDPANDA_TOPIC,
-            value=data,
-            isflush=True
-        )
-        return data
+            # send to kafka
+            kafka_hook = KafkaProducerHook(config=conf)
+            kafka_hook.produce(
+                topic=REDPANDA_TOPIC,
+                value=data,
+                isflush=True
+            )
+            return data
+        
+        with ThreadPoolExecutor(max_workers=len(MAP_URL)) as executor:
+            future = {executor.submit(crawling_weather, url, district): url for url, district in MAP_URL.items()}
+
+            for future in as_completed(future):
+                try:
+                    logging.info(f"Result: {future.result()}")
+                except Exception as e:
+                    logging.error(f"Error: {e}")
         
 
     end_task = DummyOperator(
         task_id='end'
     )
-    task_input = [{"district": d, "url": u} for d, u in MAP_URL.items()]
 
-    weather_crawling_task = weather_crawling.expand_kwargs(task_input)
+    weather_crawling_task = weather_crawling()
 
     start_task >> weather_crawling_task >> end_task
 
