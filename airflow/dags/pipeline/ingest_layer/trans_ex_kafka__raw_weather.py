@@ -95,7 +95,7 @@ with DAG(
 
 
     @task(provide_context=True, multiple_outputs=True)
-    def weather_crawling(url: str, district: str):
+    def weather_crawling():
         from utils.crawling import WeatherCrawler
 
         def crawling_weather(url, district):
