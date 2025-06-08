@@ -68,7 +68,8 @@ with DAG(
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     params=params,
-    tags=["producer", "raw"]
+    tags=["producer", "raw"],
+    max_active_runs=1
 ) as dag:
 
     start_task = DummyOperator(
@@ -120,7 +121,7 @@ with DAG(
             )
             return data
         
-        with ThreadPoolExecutor(max_workers=len(MAP_URL)) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             future = {executor.submit(crawling_weather, url, district): url for district, url in MAP_URL.items()}
 
             for future in as_completed(future):
