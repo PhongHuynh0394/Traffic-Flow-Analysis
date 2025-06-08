@@ -28,8 +28,8 @@ KAFKA_TOPIC = "traffic-object-raw"
 REDPANDA_SERVER = Variable.get("rpanda__server")
 REDPANDA_USER = Variable.get("rpanda__user")
 REDPANDA_PASS = Variable.get("rpanda__password")
-MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
-# MODEL_API = Variable.get("model__api")
+# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+MODEL_API = Variable.get("model__api")
 
 params = {
     "district": Param(
@@ -75,7 +75,8 @@ with DAG(
     catchup=False,
     params=params,
     tags=["producer", "raw"],
-    render_template_as_native_obj=True
+    render_template_as_native_obj=True,
+    max_active_runs=1,
 ) as dag:
 
     start_task = DummyOperator(
@@ -112,7 +113,6 @@ with DAG(
 
         def crawling_traffic_frame(id, district):
             # Crawl raw image
-            logging.info(f"Process district: {district} for cam {id}")
             crawler = TrafficCrawler()
             img_data = crawler.crawl(id)
 
@@ -140,7 +140,9 @@ with DAG(
 
             # Predict with api
             files = {'file': ('file.png', img_data, 'image/png')}
-            message = requests.post(MODEL_API, files=files).json()
+            message = requests.post(MODEL_API, files=files)
+            message.raise_for_status()
+            message = message.json()
             message.update({
                 "timestamp": timestamp_str,
                 "cam_id": id,
@@ -157,8 +159,8 @@ with DAG(
 
             return message
         
-        with ThreadPoolExecutor(max_workers=len(MAPPING_FIX_CAM)) as executor:
-            futures = {executor.submit(crawling_traffic_frame, id, district): id for district, id in MAPPING_FIX_CAM.items()}
+        with ThreadPoolExecutor(max_workers=25) as executor:
+            futures = {executor.submit(crawling_traffic_frame, id, district): id for id, district in MAPPING_FIX_CAM}
 
             for future in as_completed(futures):
                 try:

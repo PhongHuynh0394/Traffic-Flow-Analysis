@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import json
 import random
 
+
 class UserAgentRotator:
     _COMMON_UA_URL = "https://www.useragents.me/"
 
