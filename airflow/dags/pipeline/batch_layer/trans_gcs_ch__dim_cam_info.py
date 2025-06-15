@@ -56,7 +56,6 @@ def trans__raw__dim_cam_info():
         dim_cam_info_cleaned = dim_cam_info_cleaned.withColumn("latitude", col("latitude").cast("double")) \
                                                     .withColumn("longitude", col("longitude").cast("double"))
 
-
         # save backup to GCS
         cleaned_gs_path = f"gs://{GCS_BUCKET}/{GCS_CLEANED_PATH}/dim_cam_info_cleaned"
         try:
