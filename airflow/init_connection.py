@@ -50,9 +50,10 @@ def create_connection(session=None):
         "conn_id": "conn_clickhouse",
         "conn_type": "Sqlite",
         "host": os.getenv("CLICKHOUSE_HOST", "clickhouse"),
-        "port": os.getenv("CLICKHOUSE_PORT", 8123),
-        "login": os.getenv("CLICKHOUSE_USER", "default"),
-        "password": os.getenv("CLICKHOUSE_PASSWORD", "default"),
+        "schema": os.getenv("CLICKHOUSE_DB", "traffic_flow"),
+        "port": os.getenv("CLICKHOUSE_PORT", 9000),
+        "login": os.getenv("CLICKHOUSE_USER", "user"),
+        "password": os.getenv("CLICKHOUSE_PASSWORD", "user"),
     }
 
     for conn_cf in [minio_conn, psql_conn, redis_conn, ch_conn]:

@@ -60,9 +60,9 @@ class File2Clickhouse:
                 f"Unsupported file type: {file_type}. Must be one of {assert_support}"
             )
 
-        if not self._check_exists_table(database, table):
-            # Check exists Table
-            raise Exception(f"Table {database}.{table} not exists")
+        # if not self._check_exists_table(database, table):
+        #     # Check exists Table
+        #     raise Exception(f"Table {database}.{table} not exists")
 
         command = [
             "clickhouse-client",
@@ -159,10 +159,10 @@ class File2Clickhouse:
 
 
 if __name__ == "__main__":
-    conn_id = "clickhouse__haproxy_111_123__4core"
-    database = "something"
-    table = "something"
+    conn_id = "conn_clickhopuse"
+    database = "traffic_flow"
+    table = "dim_cam_info"
     file_ch_client = File2Clickhouse(conn_id=conn_id)
-    data = {"col1": [1, 2, 3], "col2": [2, 3, 4]}
-    data = pd.DataFrame(data)
-    file_ch_client.ingest_to_clickhouse(data=data, database=database, table=table)
+    # data = {"col1": [1, 2, 3], "col2": [2, 3, 4]}
+    # data = pd.DataFrame(data)
+    print(file_ch_client._check_exists_table(database, table))
