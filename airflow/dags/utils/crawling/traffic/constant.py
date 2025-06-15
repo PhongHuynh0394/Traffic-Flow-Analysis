@@ -439,15 +439,4 @@ CAMERA_DISTRICT_MAPPING = {'662b811d1afb9c00172dcc1d': 'Quận 1',
  '63b549b8bfd3d90017ea782c': 'Quận 9',
  '63b54c93bfd3d90017ea7ab8': 'Quận Thủ Đức'}
 
-TOP_CAMERA = {'Quận 10': '63ae7a74bfd3d90017e8f2c7', 
-              'Quận 11': '5a824c905058170011f6eab0', 
-              'Quận 12': '595dd7693dcfc400106f28b0', 
-              'Quận 3': '63ae73cebfd3d90017e8f00d', 
-              'Quận 4': '63ae76ddbfd3d90017e8f11b', 
-              'Quận 6': '66b1c22f779f740018673f6e', 
-              'Bình Tân': '662a881a1afb9c00172d2559', 
-              'Thủ Đức': '5d8cd653766c88001718894c', 
-              'Tân Bình': '5deb576d1dc17d7c5515ad08', 
-              'Tân Phú': '6623f1046f998a001b2527db'}
-
 MAPPING_FIX_CAM = [('5ad06a0d98d8fc001102e27b', 'Bình Chánh'), ('662a87df1afb9c00172d2522', 'Bình Chánh'), ('6792f03d8c5ed4001b27f378', 'Bình Chánh'), ('65e054fb6b18080018db6632', 'Quận 1'), ('662b85bf1afb9c00172dd149', 'Quận 1'), ('662b811d1afb9c00172dcc1d', 'Quận 1'), ('662b7d0c1afb9c00172dc6a6', 'Quận 1'), ('662b82da1afb9c00172dce94', 'Quận 1'), ('63ae7a74bfd3d90017e8f2c7', 'Quận 10'), ('6623e7076f998a001b2523ea', 'Quận 10'), ('595dd7693dcfc400106f28b0', 'Quận 12'), ('5deb576d1dc17d7c5515ad0e', 'Quận 3'), ('5deb576d1dc17d7c5515ad11', 'Quận 3'), ('662b80e81afb9c00172dcbec', 'Quận 3'), ('63ae73cebfd3d90017e8f00d', 'Quận 3'), ('5deb576d1dc17d7c5515acf8', 'Quận 3'), ('63ae76ddbfd3d90017e8f11b', 'Quận 4'), ('66f1266f538c780017c93579', 'Quận 5'), ('66b1c190779f740018673ed4', 'Quận 5'), ('63b3c274bfd3d90017e9ab93', 'Quận 5'), ('662b4efc1afb9c00172d86bc', 'Quận 5'), ('662a8ef41afb9c00172d2af2', 'Quận 7'), ('662a8c931afb9c00172d2901', 'Quận 7'), ('63b54996bfd3d90017ea781a', 'Quận 9'), ('63b54938bfd3d90017ea77f6', 'Quận 9'), ('59d3414302eb490011a0a610', 'Quận 9'), ('6623e7b76f998a001b25242d', 'Bình Thạnh'), ('63b66051bfd3d90017eaa4a3', 'Bình Thạnh'), ('5a8255a55058170011f6eac7', 'Bình Thạnh'), ('5d9dddb9766c880017188c96', 'Bình Thạnh'), ('662a881a1afb9c00172d2559', 'Bình Tân'), ('662b51201afb9c00172d889a', 'Bình Tân'), ('5a6066608576340017d06617', 'Gò Vấp'), ('6623ed9b6f998a001b2526cd', 'Gò Vấp'), ('5d8cd7bb766c880017188952', 'Thủ Đức'), ('5d8cd653766c88001718894c', 'Thủ Đức'), ('5deb576d1dc17d7c5515ad08', 'Tân Bình'), ('66b1c4e7779f7400186741e4', 'Tân Bình'), ('5deb576d1dc17d7c5515ad09', 'Tân Bình'), ('6623f1046f998a001b2527db', 'Tân Phú'), ('6623e8da6f998a001b2524a6', 'Phú Nhuận'), ('6623ef2b6f998a001b252753', 'Hóc Môn'), ('6623efc26f998a001b25277f', 'Hóc Môn'), ('649da495a6068200171a6cb6', 'Quận 2'), ('63b5503bbfd3d90017ea7ccc', 'Quận 2'), ('5d8cd326766c88001718893e', 'Quận 6'), ('662b4f7e1afb9c00172d872e', 'Quận 6'), ('66b1c22f779f740018673f6e', 'Quận 6'), ('5a824c905058170011f6eab0', 'Quận 11'), ('5d9de3c2766c880017188cb3', 'Nhà Bè')]

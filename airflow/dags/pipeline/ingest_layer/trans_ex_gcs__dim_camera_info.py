@@ -25,10 +25,10 @@ default_args = {
 
 
 with DAG(
-    'trans_ex_psql__dim_camera_info',
+    'trans_ex_gcs__dim_camera_info',
     default_args=default_args,
     description='Crawling traffic image id',
-    schedule_interval=None,  
+    schedule_interval="@once",  
     start_date=pendulum.datetime(2023, 4, 5, tz="Asia/Ho_Chi_Minh"),
     catchup=False,  
     params={"limit": Param(default=-1, type="integer")},
@@ -78,7 +78,7 @@ with DAG(
 
 
     @task
-    def ingest__psql_gcs(data_path: str):
+    def ingest__gcs_ch(data_path: str):
         
         # Create table
         hook = PostgresHook(postgres_conn_id=PSQL_CONN_ID)
@@ -114,6 +114,6 @@ with DAG(
     )
 
     cam_id = crawl__raw_camera_info(limit="{{params.limit}}")
-    ingesting_task = ingest__psql_gcs(cam_id)
+    ingesting_task = ingest__gcs_ch(cam_id)
 
     start_task >> create_table_psql >> cam_id >> ingesting_task >> end_task

@@ -1,9 +1,22 @@
+-- Dim cam_info
+CREATE TABLE traffic_flow.dim_cam_info
+(
+    id String,
+    location String,
+    district String,
+    longitude Float64,
+    latitude Float64,
+    updated_at DateTime DEFAULT now()
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY id;
+
 -- Traffic event
 CREATE TABLE traffic_flow.kafka_traffic (
-    ts DateTime,
+    ts DateTime('Asia/Ho_Chi_Minh'),
     cam_id String,
-    hour UInt8,
     dt Date,
+    hour UInt8,
     minute UInt8,
     district String,
     image_w Nullable(Int32),
@@ -15,17 +28,17 @@ CREATE TABLE traffic_flow.kafka_traffic (
 ENGINE = Kafka
 SETTINGS
     kafka_broker_list = 'kafka-broker-1:9094',
-    kafka_topic_list = 'traffic-weather-cleaned',
-    kafka_group_name = 'clickhouse_consumer',
+    kafka_topic_list = 'traffic-cleaned',
+    kafka_group_name = 'clickhouse_traffic_consumer',
     kafka_format = 'JSONEachRow',
     kafka_num_consumers = 1;
 
 
 CREATE TABLE traffic_flow.rmt_traffic_event (
-    ts DateTime,
+    ts DateTime('Asia/Ho_Chi_Minh'),
     cam_id String,
-    hour UInt8,
     dt Date,
+    hour UInt8,
     minute UInt8,
     district String,
     image_w Nullable(Int32),
@@ -47,9 +60,9 @@ AS SELECT * FROM traffic_flow.kafka_traffic;
 
 -- weather event
 CREATE TABLE traffic_flow.kafka_weather (
-    ts DateTime,
-    hour UInt8,
+    ts DateTime('Asia/Ho_Chi_Minh'),
     dt Date,
+    hour UInt8,
     minute UInt8,
     district String,
     cloud_ceiling_m Nullable(UInt16),
@@ -78,9 +91,9 @@ SETTINGS
 
 
 CREATE TABLE traffic_flow.rmt_weather_event (
-    ts DateTime,
-    hour UInt8,
+    ts DateTime('Asia/Ho_Chi_Minh'),
     dt Date,
+    hour UInt8,
     minute UInt8,
     district String,
     cloud_ceiling_m Nullable(UInt16),

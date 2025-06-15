@@ -5,12 +5,8 @@ service ?= none
 # Group servies
 airflow = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
 api = model-api
-<<<<<<< HEAD
-ALL_SERVICES = $(airflow) $(kafka) clickhouse
-=======
 streaming = kafka-broker-1 $(airflow) clickhouse model-api
 ALL_SERVICES = $(airflow) $(kafka) redis clickhouse
->>>>>>> 2ab99f1 (add streaming processing)
 COMPOSE_FILE = docker-compose.yaml
 
 .PHONY: build up down downall downing restart notebook

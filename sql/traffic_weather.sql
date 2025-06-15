@@ -1,5 +1,5 @@
 CREATE TABLE traffic_flow.rmt_traffic_weather_joined (
-    ts DateTime,
+    ts DateTime('Asia/Ho_Chi_Minh'),
     cam_id String,
     district String,
     image_w Nullable(Int32),

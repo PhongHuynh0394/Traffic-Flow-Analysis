@@ -105,7 +105,6 @@ with DAG(
             logging.info(data)
 
             now = pendulum.now("Asia/Ho_Chi_Minh")
-            # timestamp_str = now.to_datetime_string() # 'YYYY-MM-DD HH:MM:SS'
             timestamp_str = now.to_iso8601_string()  # e.g. '2025-06-01T20:29:07+07:00'
             data.update({
                 "timestamp": timestamp_str,

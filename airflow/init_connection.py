@@ -46,7 +46,16 @@ def create_connection(session=None):
         "keyfile json": os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
     }
 
-    for conn_cf in [minio_conn, psql_conn, redis_conn]:
+    ch_conn = {
+        "conn_id": "conn_clickhouse",
+        "conn_type": "Sqlite",
+        "host": os.getenv("CLICKHOUSE_HOST", "clickhouse"),
+        "port": os.getenv("CLICKHOUSE_PORT", 8123),
+        "login": os.getenv("CLICKHOUSE_USER", "default"),
+        "password": os.getenv("CLICKHOUSE_PASSWORD", "default"),
+    }
+
+    for conn_cf in [minio_conn, psql_conn, redis_conn, ch_conn]:
 
         # Check if the connection already exists
         conn = session.query(Connection).filter_by(conn_id=conn_cf["conn_id"]).first()

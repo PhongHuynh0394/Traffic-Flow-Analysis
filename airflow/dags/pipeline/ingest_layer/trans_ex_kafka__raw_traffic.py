@@ -16,7 +16,12 @@ import pendulum
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# from utils.crawling.traffic.constant import TOP_CAMERA
+import random
+import json
+from datetime import datetime
+from uuid import uuid4
+
+from utils.crawling.traffic.constant import MAPPING_FIX_CAM
 # from utils.preprocess import standard_location
 
 # MINIO_CONN = 'conn_minio__datalake'
@@ -66,6 +71,44 @@ conf ={
 #     'sasl.password': REDPANDA_PASS,
 # }
 
+def get_mock():
+
+    width, height = 512, 288
+    classes = [
+        {"name": "car", "class_id": 2},
+        {"name": "truck", "class_id": 7},
+        {"name": "motorbike", "class_id": 3},
+        {"name": "bus", "class_id": 5}
+    ]
+
+    num_objects = random.randint(1, 10)
+    objects = []
+    for _ in range(num_objects):
+        cls = random.choice(classes)
+        x1 = random.uniform(0, width * 0.9)
+        y1 = random.uniform(0, height * 0.9)
+        x2 = x1 + random.uniform(10, 100)
+        y2 = y1 + random.uniform(10, 100)
+        x2 = min(x2, width)
+        y2 = min(y2, height)
+
+        obj = {
+            "class_object": cls["name"],
+            "coordinates": [x1, y1, x2, y2],
+            "confidence": round(random.uniform(0.3, 0.95), 2),
+            "class_id": cls["class_id"],
+            "classname": cls["name"]
+        }
+        objects.append(obj)
+
+    data = {
+        "image_shape": [height, width],
+        "total": num_objects,
+        "objects": objects,
+    }
+
+    return data
+
 
 # Initialize the DAG
 with DAG(
@@ -111,12 +154,11 @@ with DAG(
     @task(provide_context=True)
     def image_crawling():
         from utils.crawling import TrafficCrawler
-        from utils.crawling.traffic.constant import TOP_CAMERA
 
         def crawling_traffic_frame(id, district):
             # Crawl raw image
-            crawler = TrafficCrawler()
-            img_data = crawler.crawl(id)
+            # crawler = TrafficCrawler()
+            # img_data = crawler.crawl(id)
 
             # Save raw img to S3
             # s3_hook = MinioHook(conn_id=MINIO_CONN)
@@ -141,10 +183,11 @@ with DAG(
             #     raise
 
             # Predict with api
-            files = {'file': ('file.png', img_data, 'image/png')}
-            message = requests.post(MODEL_API, files=files)
-            message.raise_for_status()
-            message = message.json()
+            # files = {'file': ('file.png', img_data, 'image/png')}
+            # message = requests.post(MODEL_API, files=files)
+            # message.raise_for_status()
+            # message = message.json()
+            message = get_mock()
             message.update({
                 "timestamp": timestamp_str,
                 "cam_id": id,
