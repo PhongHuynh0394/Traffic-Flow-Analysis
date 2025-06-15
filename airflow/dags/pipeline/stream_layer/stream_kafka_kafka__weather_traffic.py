@@ -1,12 +1,12 @@
-from airflow import DAG
-from airflow.decorators import task
-from typing import Optional
+from typing import Optional, Literal
 import pendulum
 
+from airflow import DAG
+from airflow.decorators import task
+from airflow.models import Variable
 from pyspark import SparkConf
-from pyspark.sql.types import StructType, StringType, IntegerType, TimestampType
+from pyspark.sql.types import StructType, StringType, IntegerType, TimestampType, DoubleType, StructField, ArrayType
 from pyspark.sql.functions import col, regexp_replace, trim, regexp_extract, to_timestamp, from_json
-from pyspark.sql.types import DoubleType, StructField, ArrayType
 from pyspark.sql import functions as F, types as T
 
 from utils.spark.spark_io import SparkIO
@@ -15,6 +15,10 @@ KAFKA_SERVER = "kafka-broker-1:9094"
 KAFKA_SOURCE_WEATHER = "weather-raw"
 KAFKA_SOURCE_TRAFFIC = "traffic-object-raw"
 KAFKA_SINK_TOPIC = "traffic-weather-cleaned"
+
+REDPANDA_SERVER = Variable.get("rpanda__server")
+REDPANDA_USER = Variable.get("rpanda__user")
+REDPANDA_PASS = Variable.get("rpanda__password")
 
 default_args = {
     "owner": "PhongHuynh0394",
@@ -27,37 +31,70 @@ packages = [
     "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.4"
 ]
 
-conf = (SparkConf().setAppName("Raw-Weather-Traffic-Processing")
+weather_conf = (SparkConf().setAppName("Raw-Weather-Processing")
     .set("spark.executor.memory", "2g")
     .set("spark.jars.packages", ",".join(packages))
     .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
     .setMaster("local[*]")
     )
 
+traffic_conf = (SparkConf().setAppName("Raw-Traffic-Processing")
+    .set("spark.executor.memory", "2g")
+    .set("spark.jars.packages", ",".join(packages))
+    .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
+    .setMaster("local[*]")
+    )
 
-def read_kafka_stream(spark, topic, schema):
+def read_kafka_stream(spark, topic, schema, source: Literal['kafka', "redpanda"] = "kafka"):
+    if source == "kafka":
+        return (spark.readStream
+                .format("kafka")
+                .option("kafka.bootstrap.servers", KAFKA_SERVER)
+                .option("subscribe", topic)
+                .option("startingOffsets", "latest")
+                .load()
+                .selectExpr("CAST(value AS STRING) as json")
+                .select(from_json("json", schema).alias("data"))
+                .select("data.*"))
+
     return (spark.readStream
             .format("kafka")
-            .option("kafka.bootstrap.servers", KAFKA_SERVER)
+            .option("kafka.bootstrap.servers", REDPANDA_SERVER)
             .option("subscribe", topic)
             .option("startingOffsets", "latest")
+            .option("kafka.security.protocol", "SASL_SSL")
+            .option("kafka.sasl.mechanism", "SCRAM-SHA-256")
+            .option("kafka.sasl.jaas.config", f'org.apache.kafka.common.security.scram.ScramLoginModule required username="{REDPANDA_USER}" password="{REDPANDA_PASS}";')
             .load()
             .selectExpr("CAST(value AS STRING) as json")
             .select(from_json("json", schema).alias("data"))
             .select("data.*"))
 
 
-def write_kafka_stream(df, topic, key: Optional[str] = None):
+def write_kafka_stream(df, topic, key: Optional[str] = None, sink: Literal['kafka', "redpanda"] = "kafka"):
     # Serialize to key value format
     result = df.withColumn("value", F.to_json(F.struct(*df.columns)))
     result = result.withColumn("key", F.lit(key).cast("string")) if key is None else result.withColumn("key", F.col(key).cast("string"))
 
     # Write to kafka topic
-    result.select("key", "value").writeStream \
+    if sink == "kafka":
+        result.select("key", "value").writeStream \
+            .format("kafka") \
+            .option("kafka.bootstrap.servers", KAFKA_SERVER) \
+            .option("topic", topic) \
+            .option("checkpointLocation", "/tmp/kafka_checkpoint_traffic_weather") \
+            .outputMode("append") \
+            .start() \
+            .awaitTermination()
+    else:
+        result.select("key", "value").writeStream \
         .format("kafka") \
-        .option("kafka.bootstrap.servers", KAFKA_SERVER) \
+        .option("kafka.bootstrap.servers", REDPANDA_SERVER) \
         .option("topic", topic) \
         .option("checkpointLocation", "/tmp/kafka_checkpoint_traffic_weather") \
+        .option("kafka.security.protocol", "SASL_SSL") \
+        .option("kafka.sasl.mechanism", "SCRAM-SHA-256") \
+        .option("kafka.sasl.jaas.config", f'org.apache.kafka.common.security.scram.ScramLoginModule required username="{REDPANDA_USER}" password="{REDPANDA_PASS}";') \
         .outputMode("append") \
         .start() \
         .awaitTermination()
@@ -110,7 +147,6 @@ with DAG(
             trans_df = (
                 df
                 .withColumn("ts", F.col("timestamp").cast("string"))
-                # .withColumn("ts", F.date_format(F.col("timestamp").cast("timestamp"), "yyyy-MM-dd HH:mm:ss"))
                 .withColumn("cloud_ceiling_m", extract_number("cloud ceiling"))
                 .withColumn("cloud_cover_pct", extract_number("cloud cover"))
                 .withColumn("dew_point_c", extract_number("dew point"))
@@ -141,17 +177,16 @@ with DAG(
 
             return trans_df.select(*cols)
 
-        with SparkIO(conf=conf) as spark:
+        with SparkIO(conf=weather_conf) as spark:
 
-            weather_raw = read_kafka_stream(spark, KAFKA_SOURCE_WEATHER, weather_schema)
+            weather_raw = read_kafka_stream(spark, KAFKA_SOURCE_WEATHER, weather_schema, source="kafka")
             weather_clean = transform_weather(weather_raw)
     
-            write_kafka_stream(weather_clean, "weather-cleaned", key=None)
+            write_kafka_stream(weather_clean, "weather-cleaned", key=None, sink="kafka")
 
 
     @task
     def process__traffic_event():
-
 
         object_schema = StructType([
             StructField("class_id", IntegerType()),
@@ -163,8 +198,8 @@ with DAG(
 
         traffic_schema = StructType([
             StructField("cam_id", StringType()),
-            StructField("img", StringType()),
             StructField("district", StringType()),
+            StructField("img", StringType()),
             StructField("timestamp", StringType()),
             StructField("image_shape", ArrayType(IntegerType())),
             StructField("total", IntegerType()),
@@ -210,8 +245,8 @@ with DAG(
             return trans_df.select(*cols)
 
 
-        with SparkIO(conf=conf) as spark:
-            traffic_raw = read_kafka_stream(spark, KAFKA_SOURCE_TRAFFIC, traffic_schema)
+        with SparkIO(conf=traffic_conf) as spark:
+            traffic_raw = read_kafka_stream(spark, KAFKA_SOURCE_TRAFFIC, traffic_schema, source="kafka")
             traffic_clean = transform_traffic(traffic_raw)
     
             # Apply watermarks
@@ -230,7 +265,7 @@ with DAG(
             #     how="left"
             # )
 
-            write_kafka_stream(traffic_clean, "traffic-cleaned", key=None)
+            write_kafka_stream(traffic_clean, "traffic-cleaned", key=None, sink="kafka")
 
 
     process_traffic = process__traffic_event()
