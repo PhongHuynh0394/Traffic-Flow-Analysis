@@ -389,6 +389,7 @@ services:
       dockerfile: Dockerfile
     image: &SPARK_IMAGE traffic-cluster-spark:3.2.4
     container_name: spark-master
+    hostname: spark-master
     ports:
       - "9090:8080"
       - "7077:7077"
@@ -398,11 +399,14 @@ services:
     environment:
       - SPARK_LOCAL_IP=spark-master
       - SPARK_WORKLOAD=master
+    networks:
+      - docker-net
 
 
   spark-worker-1:
     image: *SPARK_IMAGE
     container_name: spark-worker-1
+    hostname: spark-worker-1
     ports:
       - "9091:8080"
       - "7000:7000"
@@ -410,15 +414,17 @@ services:
       - spark-master
     environment:
       - SPARK_MASTER=spark://spark-master:7077
-      - SPARK_WORKER_CORES=1
-      - SPARK_WORKER_MEMORY=1G
-      - SPARK_DRIVER_MEMORY=1G
-      - SPARK_EXECUTOR_MEMORY=1G
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=1536m
+      - SPARK_DRIVER_MEMORY=512m
+      - SPARK_EXECUTOR_MEMORY=512m
       - SPARK_WORKLOAD=worker
       - SPARK_LOCAL_IP=spark-worker-1
     volumes:
        - ./spark/apps:/opt/spark-apps
       #  - ./spark/data:/opt/spark-data
+    networks:
+      - docker-net
 
   kafka-broker-1:
     image: bitnami/kafka:latest

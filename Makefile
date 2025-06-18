@@ -5,6 +5,8 @@ service ?= none
 # Group servies
 airflow = airflow-webserver airflow-scheduler postgres airflow-triggerer airflow-init
 api = model-api
+spark = spark-master spark-worker-1
+kafka = kafka-broker-1
 streaming = kafka-broker-1 $(airflow) clickhouse model-api
 ALL_SERVICES = $(airflow) $(kafka) redis clickhouse
 COMPOSE_FILE = docker-compose.yaml

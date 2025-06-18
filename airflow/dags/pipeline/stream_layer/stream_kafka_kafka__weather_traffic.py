@@ -29,17 +29,23 @@ packages = [
 ]
 
 weather_conf = (SparkConf().setAppName("Raw-Weather-Processing")
-    .set("spark.executor.memory", "2g")
+    .set("spark.executor.memory", "512m")
+    .set("spark.driver.memory", "512m") 
+    .set("spark.cores.max", "1")
     .set("spark.jars.packages", ",".join(packages))
     .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
     .setMaster("local[*]")
+    # .setMaster("spark://spark-master:7077")
     )
 
 traffic_conf = (SparkConf().setAppName("Raw-Traffic-Processing")
-    .set("spark.executor.memory", "2g")
+    .set("spark.executor.memory", "512m")
+    .set("spark.driver.memory", "512m") 
+    .set("spark.cores.max", "1")
     .set("spark.jars.packages", ",".join(packages))
     .set("spark.sql.session.timeZone", "Asia/Ho_Chi_Minh")
     .setMaster("local[*]")
+    # .setMaster("spark://spark-master:7077")
     )
 
 def read_kafka_stream(spark, topic, schema):
@@ -210,7 +216,7 @@ with DAG(
                         .withColumn("dt", F.to_date("ts")) \
                         .withColumn("minute", F.minute("ts"))
     
-            cols = ["cam_id", "ts", "district", "image_w", "image_h",
+            cols = ["cam_id", "ts", "total", "district", "image_w", "image_h",
                         "object_name", "object_confidence",
                         "object_bbox", "hour", 'dt', "minute"]
     
