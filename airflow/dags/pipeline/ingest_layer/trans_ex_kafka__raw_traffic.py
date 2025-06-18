@@ -32,11 +32,8 @@ PSQL_TABLE = "tbl__raw__dim_cam_info"
 PSQL_CONN_ID = "conn_psql__raw_crawl"
 KAFKA_TOPIC = "traffic-object-raw"
 
-# REDPANDA_SERVER = Variable.get("rpanda__server")
-# REDPANDA_USER = Variable.get("rpanda__user")
-# REDPANDA_PASS = Variable.get("rpanda__password")
-MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
-# MODEL_API = Variable.get("model__api")
+# MODEL_API = "http://object-counting-api:8000/model/object_counting/predict"
+MODEL_API = Variable.get("model__api")
 
 params = {
     "district": Param(
@@ -62,52 +59,6 @@ conf ={
     "replication_factor": 1,
     "num_partitions": 1,
 }
-
-# conf = {
-#     "bootstrap.servers": REDPANDA_SERVER,
-#     'security.protocol': 'SASL_SSL',
-#     'sasl.mechanism': 'SCRAM-SHA-256',
-#     'sasl.username': REDPANDA_USER,
-#     'sasl.password': REDPANDA_PASS,
-# }
-
-def get_mock():
-
-    width, height = 512, 288
-    classes = [
-        {"name": "car", "class_id": 2},
-        {"name": "truck", "class_id": 7},
-        {"name": "motorbike", "class_id": 3},
-        {"name": "bus", "class_id": 5}
-    ]
-
-    num_objects = random.randint(1, 10)
-    objects = []
-    for _ in range(num_objects):
-        cls = random.choice(classes)
-        x1 = random.uniform(0, width * 0.9)
-        y1 = random.uniform(0, height * 0.9)
-        x2 = x1 + random.uniform(10, 100)
-        y2 = y1 + random.uniform(10, 100)
-        x2 = min(x2, width)
-        y2 = min(y2, height)
-
-        obj = {
-            "class_object": cls["name"],
-            "coordinates": [x1, y1, x2, y2],
-            "confidence": round(random.uniform(0.3, 0.95), 2),
-            "class_id": cls["class_id"],
-            "classname": cls["name"]
-        }
-        objects.append(obj)
-
-    data = {
-        "image_shape": [height, width],
-        "total": num_objects,
-        "objects": objects,
-    }
-
-    return data
 
 
 # Initialize the DAG
@@ -157,8 +108,8 @@ with DAG(
 
         def crawling_traffic_frame(id, district):
             # Crawl raw image
-            # crawler = TrafficCrawler()
-            # img_data = crawler.crawl(id)
+            crawler = TrafficCrawler()
+            img_data = crawler.crawl(id)
 
             # Save raw img to S3
             # s3_hook = MinioHook(conn_id=MINIO_CONN)
@@ -183,11 +134,10 @@ with DAG(
             #     raise
 
             # Predict with api
-            # files = {'file': ('file.png', img_data, 'image/png')}
-            # message = requests.post(MODEL_API, files=files)
-            # message.raise_for_status()
-            # message = message.json()
-            message = get_mock()
+            files = {'file': ('file.png', img_data, 'image/png')}
+            message = requests.post(MODEL_API, files=files)
+            message.raise_for_status()
+            message = message.json()
             message.update({
                 "timestamp": timestamp_str,
                 "cam_id": id,
@@ -217,21 +167,6 @@ with DAG(
     end_task = DummyOperator(
         task_id='end'
     )
-
-    # for district in dag.params["district"]:
-    # for district in MAPPING_FIX_CAM:
-    #     # district_name = district.replace("Quận ", "district_")
-    #     district_name = district.replace(" ", "_").replace("Quận", "district").replace("Huyện", "district")
-
-        # cam_id = query_cam_id.override(
-        #     task_id=f"query_cam__{district_name}"
-        # )(district=district, limit=dag.params["limit"])
-
-        # cam_id = MAPPING_FIX_CAM[district]
-
-        # image_crawling_task = image_crawling.override(task_id=f"crawling__{district_name}") \
-        #                                     .partial(district=district) \
-        #                                     .expand(id=cam_id)
 
     image_crawling_task = image_crawling()
 

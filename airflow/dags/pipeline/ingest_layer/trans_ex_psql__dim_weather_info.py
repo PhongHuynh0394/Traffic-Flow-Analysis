@@ -8,7 +8,6 @@ import pendulum
 import pandas as pd
 import logging
 import os
-import time
 
 
 PSQL_TABLE = "tbl__raw__dim_weather_info"
